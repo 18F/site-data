@@ -4,14 +4,14 @@ from nose.tools import with_setup
 import responses
 
 def setup_func():
-    if os.path.exists("tests/_data"):
+    if os.path.exists("/tmp/_data"):
         pass
     else:
-        os.mkdir("tests/_data")
+        os.mkdir("/tmp/_data")
 
 def teardown_func():
-    if os.path.isfile('tests/_data/test.json'):
-        os.remove("tests/_data/test.json")
+    if os.path.isfile('/tmp/_data/test.json'):
+        os.remove("/tmp/_data/test.json")
     else:
         pass
 
@@ -32,6 +32,6 @@ def test_Fetch_get_authors_from_url():
 def test_Fetch_save_authors():
     f = Fetch('https://example.com')
     data = dict(test="value")
-    filename = "tests/_data/test.json"
+    filename = "/tmp/_data/test.json"
     f.save_authors(data, filename)
     assert os.path.isfile(filename)
