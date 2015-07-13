@@ -1,0 +1,10 @@
+<p>Monthly report for {{ date['string'] }}</p>
+<p>There are {{ data['current'] | length }} authors currently.</p>
+<p>In past months there were:</p>
+<ul>
+  {% for a in data |sort|reverse %}
+    {% if a <= date['formatted'] %}
+    <li>{{a | capitalize }}: {{data[a] | length }}</li>
+    {% endif %}
+  {% endfor %}
+</ul>
