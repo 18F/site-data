@@ -24,7 +24,6 @@ class GitHub():
 
     def fetch_endpoint(self, endpoint):
         git_url = "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo, endpoint)
-        print "Fetching %s from GitHub, new data is on the way!" % endpoint
         content = requests.get(git_url, auth=HTTPBasicAuth(self.user, self.auth))
         if (content.ok):
             return content
