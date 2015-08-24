@@ -13,5 +13,4 @@ before_script:
 script: nosetests -s
 
 env:
-- GITHUB_USER=test_user
-- GITHUB_AUTH=sample_key
+- GITHUB_USER=test_user GITHUB_AUTH=sample_key
