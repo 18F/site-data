@@ -1,5 +1,6 @@
 from lib.fetch import Fetch
-import os, nose
+from lib.git_parse import GitHub
+import os, nose, json
 from nose.tools import with_setup
 import responses
 
@@ -15,6 +16,8 @@ def teardown_func():
     else:
         pass
 
+### Fetch module tests ###
+
 @responses.activate
 @with_setup(setup_func, teardown_func)
 def test_Fetch_get_authors_from_url():
@@ -24,7 +27,7 @@ def test_Fetch_get_authors_from_url():
         body="{}",
         content_type="application/json")
 
-    actual = f.get_authors_from_url()
+    actual = f.get_data_from_url()
 
     assert expected == actual
 
@@ -33,5 +36,28 @@ def test_Fetch_save_authors():
     f = Fetch('https://example.com')
     data = dict(test="value")
     filename = "/tmp/_data/test.json"
-    f.save_authors(data, filename)
+    f.save_data(data, filename)
     assert os.path.isfile(filename)
+
+### GitHub Module tests ###
+
+@responses.activate
+def test_GitHub_get_repo_contents():
+    g = GitHub('18f.gsa.gov', '18f')
+    if g.user is None:
+        g.user == "sample_key"
+    expected = "[{'name': '18f.gsa.gov'}]"
+    responses.add(
+        responses.GET,
+        'https://api.github.com/repos/18f/18f.gsa.gov/contents/_posts',
+        body="[{'name': '18f.gsa.gov'}]",
+        content_type="application/json")
+    actual = g.get_repo_contents('_posts')
+    assert expected == actual
+
+def test_GitHub_parse_by_key():
+    g = GitHub('', '')
+    expected = ['data-pull', 'data-push']
+    data = [{"name":"data-push"},{"name":"data-pull"},{"name":"nondata-push"}]
+    actual = g.parse_by_key(data, 'name', 'data')
+    assert expected.sort() == actual.sort()
