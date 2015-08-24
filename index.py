@@ -5,6 +5,7 @@ from datetime import date, time, timedelta
 import json, yaml, os
 import calendar
 app = Flask(__name__)
+port = port = int(os.getenv("VCAP_APP_PORT"))
 drafts_api = GitHub('blog-drafts', '18F')
 site_api = GitHub('18f.gsa.gov', '18F')
 
@@ -110,5 +111,4 @@ def index():
     return render_template("index.html")
 
 if __name__ == "__main__":
-    app.debug = True
-    app.run()
+    app.run(host='0.0.0.0', port=port)
