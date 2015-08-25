@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, g
+from flask import Flask, request, render_template, g, make_response
 from lib.git_parse import GitHub
 from lib.fetch import Fetch
 from datetime import date, time, timedelta
@@ -110,5 +110,18 @@ def load_data():
 def index():
     return render_template("index.html")
 
+@app.route("/_data/<filename>")
+def data(filename):
+    if os.path.isfile("_data/%s" % filename):
+        response = make_response(open("_data/%s" % filename).read(), 200)
+        response.headers['Content-Type'] = 'application/json'
+    else:
+        response = make_response("not found", 404)
+    return response
+
 if __name__ == "__main__":
+    if os.environ['PRODUCTION'] == 0:
+        app.debug = True
+    else:
+        app.debug = False
     app.run(host='0.0.0.0', port=port)
