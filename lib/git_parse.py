@@ -16,7 +16,7 @@ class GitHub():
 
     def fetch_raw(self, request_string):
         url = "%s/%s" % (self.raw, request_string)
-        content = request.get(url)
+        content = requests.get(url)
         if content.ok:
             return content
         else:
@@ -77,7 +77,7 @@ class GitHub():
     def file_at_commit(self, sha, filename):
         url = "%s/%s/%s/%s" % (self.owner, self.repo, sha, filename)
         contents = self.fetch_raw(url)
-        return content.content
+        return contents.content
 
     def get_repo_contents(self, path):
         contents = self.fetch_endpoint('contents/{0}'.format(path))

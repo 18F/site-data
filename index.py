@@ -9,7 +9,7 @@ port = port = int(os.getenv("VCAP_APP_PORT"))
 drafts_api = GitHub('blog-drafts', '18F')
 site_api = GitHub('18f.gsa.gov', '18F')
 
-def fetch_authors():
+def fetch_authors(target):
     fetch = Fetch('https://18f.gsa.gov/api/data/authors.json')
     year=date.today().year
     month_end = calendar.monthrange(year, int(target.split('-')[1].strip('0')))
@@ -120,7 +120,9 @@ def data(filename):
     return response
 
 if __name__ == "__main__":
-    if os.environ['PRODUCTION'] == 0:
+    if os.path.isdir("_data") is False:
+        os.mkdir("_data")
+    if os.environ['PRODUCTION'] == '0':
         app.debug = True
     else:
         app.debug = False
