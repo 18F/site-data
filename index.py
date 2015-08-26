@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, g, make_response
 from lib.git_parse import GitHub
 from lib.fetch import Fetch
 from datetime import date, time, timedelta
+from waitress import serve
 import json, yaml, os
 import calendar
 app = Flask(__name__)
@@ -120,10 +121,12 @@ def data(filename):
     return response
 
 if __name__ == "__main__":
+    app.port=port
     if os.path.isdir("_data") is False:
         os.mkdir("_data")
     if os.environ['PRODUCTION'] == '0':
         app.debug = True
+        app.run(host='0.0.0.0', port=port)
     else:
+        serve(app, port=port)
         app.debug = False
-    app.run(host='0.0.0.0', port=port)
