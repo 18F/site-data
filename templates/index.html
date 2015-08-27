@@ -7,7 +7,19 @@
 </head>
 <body>
 <h1>Blog report!</h1>
-<h2>Total authors</h2>
+<nav id="main-nav">
+  <ul>
+    <li><a href="#authors">Authors by month</a></li>
+    <li><a href="#in-review">Posts in review</a>
+      <ul>
+        <li><a href="#in-review-morethan-3-weeks">Longer than 3 weeks</a></li>
+        <li><a href="#in-review-upto-3-weeks">Between 1 and 3 weeks</a></li>
+        <li><a href="#in-review-0-weeks">Sent this week</a></li>
+      </ul></li>
+    <li><a href="#all-posts">All other posts</a></li>
+  </ul>
+</nav>
+<h2 id="authors">Total authors</h2>
   <p>There are {{ data['current'] | length }} authors currently.</p>
   <p>In past months there were:</p>
   <ul>{% for a in data |sort|reverse %}{% if a <= date['formatted'] %}
@@ -15,33 +27,37 @@
   </ul>
 {% if data['issues'] %}
 <section class="blogging-info">
-  <h2>Blog Drafts in Review</h2>
-    <section class="oldest-posts on-hold">
+  <h2 id="in-review">Blog Drafts in Review</h2>
+    <section id="in-review-morethan-3-weeks" class="oldest-posts on-hold">
       <h3>Longer than three weeks</h3>
       <p>The following posts were sent for approval <strong>more than three weeks ago</strong>.</p>
       <ol></ol>
       <p class="none">No posts in this category!</p>
+      <a href="#main-nav">Back to top</a>
     </section>
-    <section class="newer-posts on-hold">
+    <section id="in-review-upto-3-weeks" class="newer-posts on-hold">
       <h3>Between one and three weeks</h3>
       <p>The following posts were sent for approval <strong>between one and three weeks ago</strong>.</p>
       <ol></ol>
       <p class="none">No posts in this category!</p>
+      <a href="#main-nav">Back to top</a>
     </section>
-    <section class="newest-posts on-hold">
+    <section id="in-review-0-weeks" class="newest-posts on-hold">
       <h3>In the last week</h3>
       <p>The following posts were sent for approval <strong>in the last week</strong> are are held up in approval.</p>
       <ol></ol>
       <p class="none">No posts in this category!</p>
+      <a href="#main-nav">Back to top</a>
     </section>
     <hr>
-    <section class="all-posts">
+    <section id="all-posts" class="all-posts">
       <h2>All other posts</h2>
         <p>The following posts are either ideas or in the process of being drafted.</p>
         <ul>{% for i in data['issues'] | sort(reverse=1, attribute='updated_at')%}{% set id = i['number'].__str__() %}
           <li class="blog-issue" data-approve="{{created_at(i, data['issue-'+id+'-milestones'])}}" data-created="{{i.created_at}}" data-updated="{{i.updated_at}}" data-labels="{% for l in i.labels %}{{l.name}}{% if not loop.last %},{% endif %}{% endfor %}"><a href="{{i.html_url}}">{{ i.title }}</a> tagged: {% for l in i.labels %}{{l.name}}{% if not loop.last or loop.length > 1%}, {% endif%}{% endfor %}</li>
         {% endfor %}</ul>
     {% endif %}
+    <a href="#main-nav">Back to top</a>
   </section>
 </section>
 <script src="/static/js/jquery.js"></script>
