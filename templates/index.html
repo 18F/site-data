@@ -1,40 +1,50 @@
-{% macro created_at(milestone) %}{% set id = milestone['number'].__str__() %}{% set events = data['issue-'+id+'-milestones'] %}{% if events|length > 0 %}{% set event = events|last %}{% set title = event.milestone.title %}{% if title == "ready to approve" %}{{ event.created_at }}{% endif %}{% endif %}{% endmacro %}
+{% from 'macros.html' import created_at %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>18F Blog Data</title>
+  <link href="/static/css/styles.css">
+</head>
+<body>
 <h1>Blog report!</h1>
 <h2>Total authors</h2>
   <p>There are {{ data['current'] | length }} authors currently.</p>
   <p>In past months there were:</p>
-  <ul>
-    {% for a in data |sort|reverse %}
-      {% if a <= date['formatted'] %}
-      <li>{{a | capitalize }}: {{data[a] | length }}</li>
-      {% endif %}
-    {% endfor %}
+  <ul>{% for a in data |sort|reverse %}{% if a <= date['formatted'] %}
+    <li>{{a | capitalize }}: {{data[a] | length }}</li>{% endif %}{% endfor %}
   </ul>
 {% if data['issues'] %}
 <section class="blogging-info">
-  <h2>Blog Drafts</h2>
+  <h2>Blog Drafts in Review</h2>
     <section class="oldest-posts on-hold">
+      <h3>Longer than three weeks</h3>
       <p>The following posts were sent for approval <strong>more than three weeks ago</strong>.</p>
       <ol></ol>
       <p class="none">No posts in this category!</p>
     </section>
     <section class="newer-posts on-hold">
+      <h3>Between one and three weeks</h3>
       <p>The following posts were sent for approval <strong>between one and three weeks ago</strong>.</p>
       <ol></ol>
       <p class="none">No posts in this category!</p>
     </section>
     <section class="newest-posts on-hold">
+      <h3>In the last week</h3>
       <p>The following posts were sent for approval <strong>in the last week</strong> are are held up in approval.</p>
       <ol></ol>
       <p class="none">No posts in this category!</p>
     </section>
+    <hr>
     <section class="all-posts">
-      <p>All other posts</p>
-        <ul>{% for i in data['issues'] | sort(reverse=1, attribute='updated_at')%}
-          <li class="blog-issue" data-approve="{{created_at(i)}}" data-created="{{i.created_at}}" data-updated="{{i.updated_at}}" data-labels="{% for l in i.labels %}{{l.name}}{% if not loop.last %},{% endif %}{% endfor %}"><a href="{{i.html_url}}">{{ i.title }}</a> tagged: {% for l in i.labels %}{{l.name}}{% if not loop.last or loop.length > 1%}, {% endif%}{% endfor %}</li>
+      <h2>All other posts</h2>
+        <p>The following posts are either ideas or in the process of being drafted.</p>
+        <ul>{% for i in data['issues'] | sort(reverse=1, attribute='updated_at')%}{% set id = i['number'].__str__() %}
+          <li class="blog-issue" data-approve="{{created_at(i, data['issue-'+id+'-milestones'])}}" data-created="{{i.created_at}}" data-updated="{{i.updated_at}}" data-labels="{% for l in i.labels %}{{l.name}}{% if not loop.last %},{% endif %}{% endfor %}"><a href="{{i.html_url}}">{{ i.title }}</a> tagged: {% for l in i.labels %}{{l.name}}{% if not loop.last or loop.length > 1%}, {% endif%}{% endfor %}</li>
         {% endfor %}</ul>
     {% endif %}
   </section>
 </section>
 <script src="/static/js/jquery.js"></script>
 <script src="/static/js/app.js"></script>
+</body>
+</html>

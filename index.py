@@ -1,10 +1,9 @@
-from flask import Flask, request, render_template, g, make_response
+from flask import Flask, request, render_template, make_response
 from lib.git_parse import GitHub
 from lib.fetch import Fetch
 from datetime import date, time, timedelta
 from waitress import serve
-import json, yaml, os
-import calendar
+import yaml, os, calendar
 app = Flask(__name__)
 port = port = int(os.getenv("VCAP_APP_PORT"))
 drafts_api = GitHub('blog-drafts', '18F')

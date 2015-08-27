@@ -30,10 +30,10 @@ issues.each(function(index, issue) {
   }
 })
 function timeSort(issue, days) {
-  if ( days > 15 ) {
+  if ( days > 21 ) {
     $(issue[0]).appendTo($(".oldest-posts > ol"))
     $(".oldest-posts > p.none").hide()
-  } else if (7 < days < 15) {
+  } else if (days > 7 && days < 21) {
     $(issue[0]).appendTo($(".newer-posts > ol"))
     $(".newer-posts > p.none").hide()
   } else {
