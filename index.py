@@ -93,19 +93,6 @@ def load_data():
             data[f.split('.')[0]] = fetch.get_data_from_file('_data/%s' % f)
     return dict(data=data)
 
-# @app.context_processor
-# def load_post_names():
-#     gh = GitHub('18f.gsa.gov', '18F')
-#     data = json.loads(gh.get_repo_contents('_posts'))
-#
-#     today = date.today()
-#     month = today.month
-#     year = today.year
-#     posts = dict()
-#     match = "{0}-{1}".format(year, month)
-#     posts['current'] = gh.parse_by_key(data, 'name', match)
-#     return dict(posts=posts)
-
 @app.route("/")
 def index():
     return render_template("index.html")
