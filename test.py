@@ -20,7 +20,7 @@ def teardown_func():
 
 @responses.activate
 @with_setup(setup_func, teardown_func)
-def test_Fetch_get_authors_from_url():
+def test_Fetch_get_data_from_url():
     f = Fetch('https://example.com')
     expected = dict()
     responses.add(responses.GET, 'https://example.com',
@@ -32,12 +32,28 @@ def test_Fetch_get_authors_from_url():
     assert expected == actual
 
 @with_setup(setup_func, teardown_func)
-def test_Fetch_save_authors():
+def test_Fetch_save_data():
     f = Fetch('https://example.com')
     data = dict(test="value")
     filename = "/tmp/_data/test.json"
     f.save_data(data, filename)
     assert os.path.isfile(filename)
+
+@with_setup(setup_func, teardown_func)
+def test_Fetch_save_data_w_str_expects_False():
+    f = Fetch('https://example.com')
+    data = str("value")
+    filename = "/tmp/_data/test.json"
+    assert f.save_data(data, filename) is False
+
+@with_setup(setup_func, teardown_func)
+def test_Fetch_get_data_from_file():
+    f = Fetch("")
+    data = dict(test="value")
+    filename = "/tmp/_data/test.json"
+    open(filename, 'w').write(json.dumps(data))
+    target = f.get_data_from_file(filename)
+    assert target == data
 
 ### GitHub Module tests ###
 
