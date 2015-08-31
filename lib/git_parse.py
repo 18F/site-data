@@ -46,28 +46,20 @@ class GitHub():
 
     def fetch_endpoint(self, endpoint):
         """Fetches any endpoint off of the repositories API.
-
         `self.owner` and `self.repo` are passed as parameters to `__init__`.
         `self.api` is set by default but could be overridden (if you're
         pointing at a GitHub Enterprise instance, for example).
-
         Parameters:
         endpoint, str,
-
         Like most methods in this class, the request is automatically
         authenticated based on environment variables GITHUB_USER and
         GITHUB_AUTH.
-
         >>> gh = GitHub("18f.gsa.gov", "18F")
         >>> gh.fetch_endpoint('')
-
         This will fetch all the data about 18F/18f.gsa.gov (see __init__)
-
         Example: gh.fetch_endpoint('issues?per_page=100')
-
         This will fetch the 100 most recent issues on gh.owner/gh.repo"""
         git_url = "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo, endpoint)
-
         content = requests.get(git_url, auth=HTTPBasicAuth(self.user, self.auth))
         if (content.ok):
             return content
@@ -115,7 +107,7 @@ class GitHub():
         return contents.content
 
     def get_repo_contents(self, path):
-        contents = self.fetch_endpoint('contents/%s/' % path)
+        contents = self.fetch_endpoint('contents/%s' % path)
         return contents.content
 
     def parse_by_key(self, data, key, match):
