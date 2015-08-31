@@ -21,8 +21,8 @@ def fetch_authors(target):
     authors_then = yaml.load(site_api.file_at_commit(commits[0]['sha'], '_data/authors.yml'))
     authors_now = fetch.get_data_from_url()
 
-    then = fetch.save_data(authors_then, '_data/{0}.json'.format(target))
-    now = fetch.save_data(authors_now, '_data/current.json')
+    fetch.save_data(authors_then, '_data/{0}.json'.format(target))
+    fetch.save_data(authors_now, '_data/current.json')
 
 def fetch_issues():
     gh = drafts_api
