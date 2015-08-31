@@ -83,7 +83,7 @@ def test_GitHub_fetch_raw_when_request_not_ok():
 
 @responses.activate
 def test_GitHub_get_repo_contents():
-    g = GitHub('18f.gsa.gov', '18F')
+    g = GitHub('18f.gsa.gov', '18f')
     if g.user is None:
         g.user == "sample_key"
     expected = "[{'name': '18f.gsa.gov'}]"
@@ -93,8 +93,6 @@ def test_GitHub_get_repo_contents():
         body="[{'name': '18f.gsa.gov'}]",
         content_type="application/json")
     actual = g.get_repo_contents('_posts')
-    import pdb; pdb.set_trace()
-
     assert expected == actual
 
 def test_GitHub_parse_by_key():
