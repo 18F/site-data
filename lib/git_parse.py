@@ -1,12 +1,20 @@
-import requests, yaml
+import os, requests, yaml
 from requests.auth import HTTPBasicAuth
-import os
-"""
-parses the first commit from:
-git log --before={YYY-MM-DD} --after={YYYY-MM-DD} --pretty=format:"%H"
-"""
 class GitHub():
     def __init__(self, repo, owner):
+        """Sets up the class
+        ## Parameters:
+        *   repo, str, the repo we want to work with (usually necessary for all
+            but a reqired parameter for now).
+        *   owner, str, the owner of repo this usually is necessary
+
+        >>> gh = GitHub('18f.gsa.gov', '18F')
+
+        This will set up an instance of this class with repo and owner set to
+        18F and targeting the '18f.gsa.gov' repo.
+
+        Once you have `gh` set you can call methods like `gh.fetch_endpoint()`
+        Examples thorughout this documentation will use `gh` this way."""
         self.repo = repo.strip()
         self.owner = owner.strip()
         self.api = "https://api.github.com"
@@ -15,6 +23,20 @@ class GitHub():
         self.auth = os.environ['GITHUB_AUTH']
 
     def fetch_raw(self, request_string):
+        """Gets the raw contents of a file from a raw.githubusercontent URL
+
+        Appends https://raw.githubusercontent.com/ to a passed URL string
+        allowing you to fetch a file from a specific HEAD or SHA.
+
+        Example:
+        >>> gh = GitHub("", "")
+        >>> gh.fetch_raw("18F/18f.gsa.gov/staging/Gemfile.lock")
+
+        This will get the Gemfile lock from GitHub as it exists at the current
+        HEAD of the staging branch. This is similar to but a bit simpler
+        implementation of making a request to the contents endpoint of the API.
+
+        Returns the content if the request returns 200/OK or False."""
         url = "%s/%s" % (self.raw, request_string)
         content = requests.get(url)
         if content.ok:
@@ -23,16 +45,29 @@ class GitHub():
             return False
 
     def fetch_endpoint(self, endpoint):
-        git_url = "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo, endpoint)
-        content = requests.get(git_url, auth=HTTPBasicAuth(self.user, self.auth))
-        if (content.ok):
-            return content
-        else:
-            return False
+        """Fetches any endpoint off of the repositories API.
 
-    def search(self, endpoint, query, sort=None, order=None):
-        git_url = "%s/search/%s?%s&%s&%s," % (endpoint, query, sort, order)
-        print "Fetching search query %s from GitHub" % query
+        `self.owner` and `self.repo` are passed as parameters to `__init__`.
+        `self.api` is set by default but could be overridden (if you're
+        pointing at a GitHub Enterprise instance, for example).
+
+        Parameters:
+        endpoint, str,
+
+        Like most methods in this class, the request is automatically
+        authenticated based on environment variables GITHUB_USER and
+        GITHUB_AUTH.
+
+        >>> gh = GitHub("18f.gsa.gov", "18F")
+        >>> gh.fetch_endpoint('')
+
+        This will fetch all the data about 18F/18f.gsa.gov (see __init__)
+
+        Example: gh.fetch_endpoint('issues?per_page=100')
+
+        This will fetch the 100 most recent issues on gh.owner/gh.repo"""
+        git_url = "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo, endpoint)
+
         content = requests.get(git_url, auth=HTTPBasicAuth(self.user, self.auth))
         if (content.ok):
             return content
@@ -80,7 +115,7 @@ class GitHub():
         return contents.content
 
     def get_repo_contents(self, path):
-        contents = self.fetch_endpoint('contents/{0}'.format(path))
+        contents = self.fetch_endpoint('contents/%s/' % path)
         return contents.content
 
     def parse_by_key(self, data, key, match):
