@@ -1,9 +1,9 @@
 from lib.fetch import Fetch
 from lib.git_parse import GitHub
-import os, nose, json
+import os, nose, json, requests, requests_mock
 from nose.tools import with_setup
 import responses
-
+_globals = dict()
 def Fetch_setup():
     if os.path.exists("/tmp/_data"):
         pass
@@ -56,6 +56,12 @@ def test_Fetch_get_data_from_file():
     assert target == data
 
 ### GitHub Module tests ###
+def issues_setup():
+    _globals['testingdata'] = {x.__str__():x**2 for x in range(0,100)}
+
+def issues_teardown():
+    _globals['testingdata'] = None
+
 @responses.activate
 def test_GitHub_fetch_raw():
     g = GitHub('18f.gsa.gov','18F')
@@ -71,8 +77,8 @@ def test_GitHub_fetch_raw():
 @responses.activate
 def test_GitHub_fetch_raw_when_request_not_ok():
     g = GitHub('18f.gsa.gov','18F')
-    request_string = "18F/18f.gsa.gov/staging/go"
-    url = "https://raw.githubusercontent.com/18F/18f.gsa.gov/staging/go"
+    request_string = "18F/18f.gsa.gov/staging/go.html"
+    url = "https://raw.githubusercontent.com/18F/18f.gsa.gov/staging/go.html"
     responses.add(
         responses.GET, url,
         body='',
@@ -80,6 +86,68 @@ def test_GitHub_fetch_raw_when_request_not_ok():
         content_type="text/html")
     actual = g.fetch_raw(request_string)
     assert actual is False
+
+@responses.activate
+def test_GitHub_fetch_endpoint_when_request_ok():
+    g = GitHub('18f.gsa.gov','18F')
+    endpoint = "issues"
+    url = "%s/repos/%s/%s/%s" % (g.api, g.owner, g.repo, endpoint)
+    responses.add(
+        responses.GET, url,
+        body='',
+        status=200,
+        content_type="text/html")
+    actual = g.fetch_endpoint(endpoint)
+    assert actual is not False
+
+@responses.activate
+def test_GitHub_fetch_endpoint_when_request_not_ok():
+    g = GitHub('18f.gsa.gov','18F')
+    endpoint = "nonexistentendpoint"
+    url = "%s/repos/%s/%s/%s" % (g.api, g.owner, g.repo, endpoint)
+    responses.add(
+        responses.GET, url,
+        body='',
+        status=404,
+        content_type="text/html")
+    actual = g.fetch_endpoint(endpoint)
+    assert actual is False
+
+@responses.activate
+def test_GitHub_fetch_commits_request_not_ok():
+    g = GitHub('18f.gsa.gov','18F')
+    endpoint = "commits"
+    url = "%s/repos/%s/%s/%s" % (g.api, g.owner, g.repo, endpoint)
+    responses.add(
+        responses.GET, url,
+        body='',
+        status=404,
+        content_type="text/html")
+    actual = g.fetch_commits()
+    assert actual is False
+
+@responses.activate
+def test_GitHub_fetch_commits_request_ok():
+    g = GitHub('18f.gsa.gov','18F')
+    endpoint = "commits"
+    url = "%s/repos/%s/%s/%s" % (g.api, g.owner, g.repo, endpoint)
+    responses.add(
+        responses.GET, url,
+        body='[{"name": "18f.gsa.gov"}]',
+        status=200,
+        content_type="application/json")
+    actual = g.fetch_commits()
+    assert actual == [{u'name': u'18f.gsa.gov'}]
+
+def test_GitHub_fetch_issues():
+    g= GitHub('18f.gsa.gov', '18F')
+    url = "%s/repos/%s/%s/issues?per_page=100" % (g.api, g.owner, g.repo)
+    session = requests.Session()
+    adapter = requests_mock.Adapter()
+    session.mount('mock', adapter)
+    adapter.register_uri('GET', url, text='data')
+    issues = g.fetch_issues()
+    assert issues is not False
 
 @responses.activate
 def test_GitHub_get_repo_contents():

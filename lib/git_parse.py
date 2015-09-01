@@ -66,7 +66,7 @@ class GitHub():
         else:
             return False
 
-    def fetch_commits(self, params):
+    def fetch_commits(self, params=None):
         commits = self.fetch_endpoint('commits')
         if commits:
             return commits.json()
