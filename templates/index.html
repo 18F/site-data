@@ -21,8 +21,8 @@
   </ul>
 </nav>
 <h2 id="authors">Total authors</h2>
-  <p>There are {{ data['current'] | length }} authors currently.</p>
-  <p>In past months there were:</p>
+  <p>There are currently {{ data['current'] | length }} authors.</p>
+  <p>The number of authors in previous months has been:</p>
   <ul>{% for a in data |sort|reverse %}{% if a <= date['formatted'] %}
     <li>{{a | capitalize }}: {{data[a] | length }}</li>{% endif %}{% endfor %}
   </ul>

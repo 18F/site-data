@@ -33,7 +33,7 @@ function timeSort(issue, days) {
   } else if ( days > 21 && days < 42 ) {
     $(issue[0]).appendTo($(".older-posts > ol"))
     $(".older-posts > p.none").hide()
-  } else if (days > 7 && days < 21) {
+  } else if (days > 7 && days <= 21) {
     $(issue[0]).appendTo($(".newer-posts > ol"))
     $(".newer-posts > p.none").hide()
   } else {
