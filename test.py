@@ -118,6 +118,24 @@ def test_GitHub_fetch_issues(m):
     assert actual == expected
 
 @requests_mock.mock()
+def test_GitHub_fetch_issues_request_not_ok(m):
+    g= GitHub('18f.gsa.gov', '18F')
+    url = "%s/repos/%s/%s/issues" % (g.api, g.owner, g.repo)
+    m.get(url, text="I'm a teapot", status_code=418)
+    actual = g.fetch_issues()
+    assert actual == False
+
+def test_GitHub_split_by_event():
+    events = list()
+    expected = list()
+    events.append({'event': 'milestoned', 'name': 'Issue 0'})
+    events.append({'event': 'closed', 'name': 'Issue 1'})
+    expected.append(events[0])
+    g = GitHub('18f.gsa.gov', '18F')
+    actual = g.split_by_event(events, 'milestoned')
+    assert actual == expected
+
+@requests_mock.mock()
 def test_GitHub_get_repo_contents(m):
     g = GitHub('18f.gsa.gov', '18f')
     url = 'https://api.github.com/repos/18f/18f.gsa.gov/contents/_posts'
