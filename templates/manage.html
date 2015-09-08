@@ -1,0 +1,7 @@
+{% extends "header.html" %}
+{% block body %}
+<form action="/manage" method="get">
+  <button name="rebuild" value="staging">Rebuild staging.18f.us</button>
+  <button name="rebuild" value="production">Rebuild 18f.gsa.gov</button>
+</form>
+{% endblock %}

@@ -4,11 +4,13 @@ from lib.fetch import Fetch
 from functools import wraps
 from datetime import date, time, timedelta
 from waitress import serve
+import requests, json
 import yaml, os, calendar
 app = Flask(__name__)
 port = port = int(os.getenv("VCAP_APP_PORT"))
 drafts_api = GitHub('blog-drafts', '18F')
 site_api = GitHub('18f.gsa.gov', '18F')
+servers = {"production":os.environ['PROD'], "staging":os.environ['STAGING']}
 # htpasswd configuration c/o http://flask.pocoo.org/snippets/8/
 def check_auth(username, password):
     """This function is called to check if a username /
@@ -120,6 +122,20 @@ def load_data():
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@requires_auth
+@app.route("/manage/")
+def manage():
+    error = None
+    if request.args.get('rebuild'):
+        server = request.args.get('rebuild')
+        url = servers[server]
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        payload = {"ref": "refs/heads/%s" % server}
+        requests.post(url, data=json.dumps(payload), headers=headers)
+    else:
+        error = "No server to rebuild"
+    return render_template("manage.html", error=error)
 
 @app.route("/_data/<filename>")
 def data(filename):

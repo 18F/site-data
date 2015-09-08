@@ -1,11 +1,5 @@
-{% from 'macros.html' import created_at %}
-<!DOCTYPE html>
-<html>
-<head>
-  <title>18F Blog Data</title>
-  <link href="/static/css/styles.css">
-</head>
-<body>
+{% extends "header.html" %}
+{% block body %}
 <h1>Blog report!</h1>
 <nav id="main-nav">
   <ul>
@@ -68,7 +62,4 @@
     <a href="#main-nav">Back to top</a>
   </section>
 </section>
-<script src="/static/js/jquery.js"></script>
-<script src="/static/js/app.js"></script>
-</body>
-</html>
+{% endblock %}
