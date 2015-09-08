@@ -1,6 +1,7 @@
-from flask import Flask, request, render_template, make_response
+from flask import Flask, request, render_template, make_response, Response
 from lib.git_parse import GitHub
 from lib.fetch import Fetch
+from functools import wraps
 from datetime import date, time, timedelta
 from waitress import serve
 import yaml, os, calendar
@@ -8,6 +9,28 @@ app = Flask(__name__)
 port = port = int(os.getenv("VCAP_APP_PORT"))
 drafts_api = GitHub('blog-drafts', '18F')
 site_api = GitHub('18f.gsa.gov', '18F')
+# htpasswd configuration c/o http://flask.pocoo.org/snippets/8/
+def check_auth(username, password):
+    """This function is called to check if a username /
+    password combination is valid.
+    """
+    return username == os.environ['HTUSER'] and password == os.environ['HTAUTH']
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response(
+    'Could not verify your access level for that URL.\n'
+    'You have to login with proper credentials', 401,
+    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
 
 def fetch_authors(target):
     fetch = Fetch('https://18f.gsa.gov/api/data/authors.json')
@@ -93,6 +116,7 @@ def load_data():
             data[f.split('.')[0]] = fetch.get_data_from_file('_data/%s' % f)
     return dict(data=data)
 
+@requires_auth
 @app.route("/")
 def index():
     return render_template("index.html")
