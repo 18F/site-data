@@ -118,13 +118,13 @@ def load_data():
             data[f.split('.')[0]] = fetch.get_data_from_file('_data/%s' % f)
     return dict(data=data)
 
-@requires_auth
 @app.route("/")
+@requires_auth
 def index():
     return render_template("index.html")
 
-@requires_auth
 @app.route("/manage/")
+@requires_auth
 def manage():
     error = None
     if request.args.get('rebuild'):
