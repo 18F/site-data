@@ -1,2 +1,3 @@
 *.pyc
 _data/issue*.json
+static/css

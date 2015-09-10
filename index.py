@@ -1,8 +1,9 @@
+from datetime import date, time, timedelta
 from flask import Flask, request, render_template, make_response, Response
 from lib.git_parse import GitHub
 from lib.fetch import Fetch
 from functools import wraps
-from datetime import date, time, timedelta
+from sassutils.wsgi import SassMiddleware
 from waitress import serve
 import requests, json
 import yaml, os, calendar
@@ -11,6 +12,9 @@ port = port = int(os.getenv("VCAP_APP_PORT"))
 drafts_api = GitHub('blog-drafts', '18F')
 site_api = GitHub('18f.gsa.gov', '18F')
 servers = {"production":os.environ['PROD'], "staging":os.environ['STAGING']}
+scss_manifest = {app.name: ('static/sass', 'static/css', '/static/css')}
+# Middleware
+app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
 # htpasswd configuration c/o http://flask.pocoo.org/snippets/8/
 def check_auth(username, password):
     """This function is called to check if a username /
@@ -150,7 +154,10 @@ if __name__ == "__main__":
     app.port=port
     if os.path.isdir("_data") is False:
         os.mkdir("_data")
-    if os.environ['PRODUCTION'] == '0':
+    if os.environ['ENV'] == 'local':
+        app.logger.debug('A value for debugging')
+        app.logger.warning('A warning occurred (%d apples)', 42)
+        app.logger.error('An error occurred')
         app.debug = True
         app.run(host='0.0.0.0', port=port)
     else:
