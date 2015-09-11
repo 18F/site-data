@@ -1,10 +1,20 @@
 @import "bourbon/bourbon";
 @import "neat/neat";
+@import "components/_grid-settings";
 h1, h2, h3, h4, h5, h6, p {
   color: #222;
 }
-section {
+.container {
   @include outer-container;
-  aside { @include span-columns(3); }
-  article { @include span-columns(9); }
+  section { @include span-columns(9); }
+  nav {
+    @include span-columns(12);
+    ul {
+      display: inline;
+      li {
+        list-style: none;
+        display: inline;
+      }
+    }
+  }
 }

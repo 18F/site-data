@@ -8,13 +8,15 @@ from waitress import serve
 import requests, json
 import yaml, os, calendar
 app = Flask(__name__)
-port = port = int(os.getenv("VCAP_APP_PORT"))
+port = int(os.getenv("VCAP_APP_PORT"))
 drafts_api = GitHub('blog-drafts', '18F')
 site_api = GitHub('18f.gsa.gov', '18F')
 servers = {"production":os.environ['PROD'], "staging":os.environ['STAGING']}
 scss_manifest = {app.name: ('static/sass', 'static/css', '/static/css')}
 # Middleware
-app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
+if os.environ['ENV'] == 'local' or os.path.isfile('static/css/style.scss.css') is False:
+    app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
+
 # htpasswd configuration c/o http://flask.pocoo.org/snippets/8/
 def check_auth(username, password):
     """This function is called to check if a username /
