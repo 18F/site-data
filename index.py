@@ -1,20 +1,20 @@
 from datetime import date, time, timedelta
 from flask import Flask, request, render_template, make_response, Response
-from lib.git_parse import GitHub
-from lib.fetch import Fetch
 from functools import wraps
 from sassutils.wsgi import SassMiddleware
 from waitress import serve
 import requests, json
 import yaml, os, calendar
+from lib.git_parse import GitHub
+from lib.fetch import Fetch
 app = Flask(__name__)
-port = int(os.getenv("VCAP_APP_PORT"))
+app.config.from_object('config')
+import pdb; pdb.set_trace()
 drafts_api = GitHub('blog-drafts', '18F')
 site_api = GitHub('18f.gsa.gov', '18F')
-servers = {"production":os.environ['PROD'], "staging":os.environ['STAGING']}
-scss_manifest = {app.name: ('static/sass', 'static/css', '/static/css')}
 # Middleware
-if os.environ['ENV'] == 'local' or os.path.isfile('static/css/style.scss.css') is False:
+scss_manifest = {app.name: ('static/sass', 'static/css', '/static/css')}
+if os.environ['ENV'] == 'local' or not os.path.size('static/css/'):
     app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
 
 # htpasswd configuration c/o http://flask.pocoo.org/snippets/8/
@@ -22,7 +22,7 @@ def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    return username == os.environ['HTUSER'] and password == os.environ['HTAUTH']
+    return username == app.config['HTUSER'] and password == app.config['HTAUTH']
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""
@@ -153,15 +153,15 @@ def data(filename):
     return response
 
 if __name__ == "__main__":
-    app.port=port
+    app.port=app.config['PORT']
     if os.path.isdir("_data") is False:
         os.mkdir("_data")
-    if os.environ['ENV'] == 'local':
+    if app.config['ENV'] == 'local':
         app.logger.debug('A value for debugging')
         app.logger.warning('A warning occurred (%d apples)', 42)
         app.logger.error('An error occurred')
         app.debug = True
-        app.run(host='0.0.0.0', port=port)
+        app.run(host='0.0.0.0', port=app.port)
     else:
         serve(app, port=port)
         app.debug = False
