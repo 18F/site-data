@@ -8,17 +8,21 @@ class Drafts():
     def fetch_all(self, ):
         gh = self.drafts_api
         issues = gh.fetch_issues()
-        self.fetch.save_data(issues, '_data/issues.json')
+        if issues:
+            self.fetch.save_data(issues, '_data/issues.json')
+        else:
+            import pdb; pdb.set_trace()
 
     def fetch_events(self, number, part=None, name=None):
         gh = self.drafts_api
         fetch = Fetch('')
         events = gh.fetch_issue_events(number, part)
-        if events != []:
+        if events:
             fetch.save_data(events, '_data/events-%s.json' % number )
 
     def fetch_milestone(self, i):
         gh = self.drafts_api
         fetch = Fetch('')
         milestones = gh.fetch_milestone(i)
-        fetch.save_data(milestones, '_data/issue-%s-milestones.json' % i)
+        if milestones:
+            fetch.save_data(milestones, '_data/issue-%s-milestones.json' % i)
