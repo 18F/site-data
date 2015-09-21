@@ -61,11 +61,10 @@ class GitHub():
         This will fetch the 100 most recent issues on gh.owner/gh.repo"""
         git_url = "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo, endpoint)
         content = requests.get(git_url, auth=HTTPBasicAuth(self.user, self.auth))
-
         if (content.ok):
             return content
         else:
-            raise Exception('Error connecting to the GitHub API %s!' % content.status)
+            return False
 
     def fetch_commits(self, params=None):
         commits = self.fetch_endpoint('commits')
@@ -76,7 +75,6 @@ class GitHub():
 
     def fetch_issues(self, params=None):
         issues = self.fetch_endpoint('issues?per_page=100')
-        import pdb; pdb.set_trace()
 
         if issues:
             return issues.json()

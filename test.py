@@ -41,7 +41,7 @@ def test_Fetch_save_data_w_str_expects_False():
     f = Fetch('https://example.com')
     data = str("value")
     filename = "/tmp/_data/test.json"
-    assert f.save_data(data, filename) is False
+    f.save_data(data, filename) is False
 
 @with_setup(setup, teardown)
 def test_Fetch_get_data_from_file():
