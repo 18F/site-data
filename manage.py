@@ -15,8 +15,11 @@ def updatedata():
     authors  = Authors()
     drafts   = Drafts()
     today = date.today().strftime("%Y-%m")
+    print "Fetching authors"
     authors.fetch_all(today)
+    print "Fetching drafts"
     drafts.fetch_all()
+
     if path.exists('_data/issues.json'):
         issues = fetch.get_data_from_file("_data/issues.json")
 
@@ -24,6 +27,7 @@ def updatedata():
         for i in issues:
             number = i['number']
             milestones = "_data/issue-%s-milestones.json" % number
+            print "Fetching milestones for %s" % number
             drafts.fetch_milestone(number)
 
 @manager.command
