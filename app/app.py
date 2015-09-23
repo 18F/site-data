@@ -13,7 +13,6 @@ scss_manifest = {app.name: ('static/sass', 'static/css', 'static/css')}
 # Middleware
 app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
 
-port = port = int(os.getenv("VCAP_APP_PORT"))
 drafts_api = GitHub('blog-drafts', '18F')
 site_api = GitHub('18f.gsa.gov', '18F')
 servers = {"production":os.environ['PROD'], "staging":os.environ['STAGING']}

@@ -6,8 +6,12 @@ from blog.issues import Drafts
 from blog.authors import Authors
 from datetime import date
 from os import path, stat, environ
+from waitress import serve
 
 manager = Manager(app)
+
+port = port = int(environ["VCAP_APP_PORT"])
+
 if environ['ENV'] == 'local':
     app.logger.debug('A value for debugging')
     app.logger.warning('A warning occurred (%d apples)', 42)
@@ -38,8 +42,8 @@ def updatedata():
             drafts.fetch_milestone(number)
 
 @manager.command
-def hello():
-    print "hello"
+def deploy():
+    serve(app, port=port)
 
 if __name__ == "__main__":
     manager.run()
