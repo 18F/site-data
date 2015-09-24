@@ -2,8 +2,8 @@ from flask.ext.script import Manager
 from app.app import app
 from lib.git_parse import GitHub
 from lib.fetch import Fetch
-from blog.issues import Drafts
-from blog.authors import Authors
+# from blog.issues import Drafts
+# from blog.authors import Authors
 from datetime import date
 from os import path, stat, environ
 from waitress import serve
