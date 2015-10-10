@@ -121,7 +121,7 @@ class Issue(db.Model):
             'html_url': issue_data.get('html_url'),
             'events_url': issue_data.get('events_url'),
             'updated_at': to_python_datetime(issue_data['updated_at']),
-            'created_at': to_python_datetime(issue_data['updated_at']),
-            'closed_at': to_python_datetime(issue_data['updated_at']),
+            'created_at': to_python_datetime(issue_data['created_at']),
+            'closed_at': to_python_datetime(issue_data['closed_at']),
             }
         return cls(**insertable)
