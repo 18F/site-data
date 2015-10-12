@@ -19,7 +19,7 @@ migrate = Migrate(app, db)
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
-port = int(environ["VCAP_APP_PORT"])  
+port = int(environ["VCAP_APP_PORT"])
 
 if environ['ENV'] == 'local':
     app.logger.debug('A value for debugging')
@@ -53,6 +53,11 @@ def updatedata():
 @manager.command
 def deploy():
     serve(app, port=port)
+
+@manager.command
+def clean_db():
+    for tbl in reversed(db.metadata.sorted_tables):
+        db.engine.execute(db.metadata.sorted_tables[0].delete())
 
 if __name__ == "__main__":
     manager.run()

@@ -43,11 +43,12 @@ def requires_auth(f):
 def fetch_authors_as_of_month(month):
     "Fetches from github blog authors as of ``month`` instance"
     month_begin = "{0}-01".format(month)
-    month_end = "{0}-{1}".format(month, month.end())
+    month_end = "{0}-{1}".format(month, month.end().day)
     commit_range = {"since":month_begin, "until":month_end}
     commits = site_api.fetch_commits(commit_range)
-    authors = yaml.load(site_api.file_at_commit(commits[0]['sha'], '_data/authors.yml'))
-    return authors
+    if commits:
+        authors = yaml.load(site_api.file_at_commit(commits[0]['sha'], '_data/authors.yml'))
+    return authors or {}
 
 def add_authors_to_month(authors, month):
     for (username, author_data) in authors.items():
@@ -57,7 +58,7 @@ def add_authors_to_month(authors, month):
             author.months.append(month)
 
 def create_months():
-    FIRST_MONTH_OF_BLOG = date(2015, 6, 1)
+    FIRST_MONTH_OF_BLOG = date(2014, 3, 1)
     month = Month.get_or_create(FIRST_MONTH_OF_BLOG)
     while month.begin <= date.today():
         db.session.add(month)
@@ -132,12 +133,13 @@ def load_data():
     if not GithubQueryLog.was_fetched_today('issues'):
         fetch_issues()
 
-    for m in Month.query:
-        data[str(m)] = m.authors
+    data['months'] = Month.query.filter(Month.authors)
+    # {str(m): m.authors for m in Month.query}
     data['current'] = Author.query.all()
     data['issues'] = Issue.query.all()
     for issue in Issue.query:
         data['issue-{0}-milestones'.format(issue.number)] = issue.milestones
+    data['formatted'] = date.today().strftime('%Y-%-m-%d')
 
     return dict(data=data)
 

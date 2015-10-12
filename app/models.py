@@ -1,4 +1,5 @@
 import calendar
+from functools import total_ordering
 from datetime import date, datetime
 from . import db
 from .utils import to_python_datetime
@@ -9,7 +10,7 @@ author_months = db.Table('author_months',
     db.Column('author_id', db.Integer, db.ForeignKey('author.id'))
     )
 
-
+@total_ordering
 class Month(db.Model):
     begin = db.Column(db.Date(), primary_key=True)
     authors = db.relationship('Author', secondary=author_months,
@@ -36,6 +37,13 @@ class Month(db.Model):
     def author_list_is_complete(self):
         GithubQueryLog.last_query_datetime('authors').date() > self.end()
 
+    def __eq__(self, other):
+        return self.begin == other.begin
+
+    def __gt__(self, other):
+        return self.begin > other.begin
+
+    # other comparison operators automagically inferred by `total_ordering`
 
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -97,6 +105,12 @@ class Label(db.Model):
     url = db.Column(db.String())
     color = db.Column(db.String(), nullable=True)
 
+    @classmethod
+    def get_or_create(cls, label_data):
+        label = cls.query.filter_by(name=label_data['name']).first() \
+                or cls(**label_data)
+        return label
+
 
 class Milestone(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -157,4 +171,8 @@ class Issue(db.Model):
             'created_at': to_python_datetime(issue_data['created_at']),
             'closed_at': to_python_datetime(issue_data['closed_at']),
             }
-        return cls(**insertable)
+        issue = cls(**insertable)
+        for label_data in issue_data['labels']:
+            issue.labels.append(Label.get_or_create(label_data))
+
+        return issue

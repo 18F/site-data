@@ -44,7 +44,7 @@ class GitHub():
         else:
             return False
 
-    def fetch_endpoint(self, endpoint):
+    def fetch_endpoint(self, endpoint, params={}):
         """Fetches any endpoint off of the repositories API.
         `self.owner` and `self.repo` are passed as parameters to `__init__`.
         `self.api` is set by default but could be overridden (if you're
@@ -60,14 +60,15 @@ class GitHub():
         Example: gh.fetch_endpoint('issues?per_page=100')
         This will fetch the 100 most recent issues on gh.owner/gh.repo"""
         git_url = "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo, endpoint)
-        content = requests.get(git_url, auth=HTTPBasicAuth(self.user, self.auth))
+        content = requests.get(git_url, params=params,
+                               auth=HTTPBasicAuth(self.user, self.auth))
         if (content.ok):
             return content
         else:
             return False
 
-    def fetch_commits(self, params=None):
-        commits = self.fetch_endpoint('commits')
+    def fetch_commits(self, params={}):
+        commits = self.fetch_endpoint('commits', params=params)
         if commits:
             return commits.json()
         else:
@@ -104,7 +105,7 @@ class GitHub():
     def file_at_commit(self, sha, filename):
         url = "%s/%s/%s/%s" % (self.owner, self.repo, sha, filename)
         contents = self.fetch_raw(url)
-        return contents.content
+        return (contents and contents.content) or ''
 
     def get_repo_contents(self, path):
         contents = self.fetch_endpoint('contents/%s' % path)

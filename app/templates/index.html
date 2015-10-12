@@ -18,8 +18,9 @@
   <h2 id="authors usa-heading">Total authors</h2>
     <p>There are currently {{ data['current'] | length }} authors.</p>
     <p>The number of authors in previous months has been:</p>
-    <ul>{% for a in data |sort|reverse %}{% if a <= date['formatted'] %}
-      <li>{{a | capitalize }}: {{data[a] | length }}</li>{% endif %}{% endfor %}
+    <ul>{% for m in data.months |sort|reverse %}
+      <li>{{ m }}: {{ m.authors | length}}</li>
+        {% endfor %}
     </ul>
   {% if data['issues'] %}
   <section class="blogging-info">
