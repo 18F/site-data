@@ -5,8 +5,9 @@ from lib.fetch import Fetch
 from functools import wraps
 from waitress import serve
 import requests, json
-import yaml, os, calendar
+import yaml, os
 from sassutils.wsgi import SassMiddleware
+from .models import GithubQueryLog, Author, Issue, Milestone, Month, db
 
 app = Flask(__name__)
 scss_manifest = {app.name: ('static/sass', 'static/css', 'static/css')}
@@ -39,26 +40,62 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-def fetch_authors(target):
-    fetch = Fetch('https://18f.gsa.gov/api/data/authors.json')
-    year=date.today().year
-    month_end = calendar.monthrange(year, int(target.split('-')[1].strip('0')))
-    month_begin = "{0}-01".format(target)
-    month_end = "{0}-{1}".format(target, month_end[1])
+def fetch_authors_as_of_month(month):
+    "Fetches from github blog authors as of ``month`` instance"
+    month_begin = "{0}-01".format(month)
+    month_end = "{0}-{1}".format(month, month.end())
     commit_range = {"since":month_begin, "until":month_end}
     commits = site_api.fetch_commits(commit_range)
+    authors = yaml.load(site_api.file_at_commit(commits[0]['sha'], '_data/authors.yml'))
+    return authors
 
-    authors_then = yaml.load(site_api.file_at_commit(commits[0]['sha'], '_data/authors.yml'))
+def add_authors_to_month(authors, month):
+    for (username, author_data) in authors.items():
+        author = Author.from_gh_data(username, author_data)
+        db.session.add(author)
+        if month not in author.months:
+            author.months.append(month)
+
+def create_months():
+    FIRST_MONTH_OF_BLOG = date(2015, 6, 1)
+    month = Month.get_or_create(FIRST_MONTH_OF_BLOG)
+    while month.begin <= date.today():
+        db.session.add(month)
+        if (not month.authors) or (not month.author_list_is_complete()):
+            authors = fetch_authors_as_of_month(month)
+            add_authors_to_month(authors, month)
+        month = month.next()
+    db.session.commit()
+
+def fetch_authors():
+    create_months()
+    fetch = Fetch('https://18f.gsa.gov/api/data/authors.json')
     authors_now = fetch.get_data_from_url()
-
-    fetch.save_data(authors_then, '_data/{0}.json'.format(target))
-    fetch.save_data(authors_now, '_data/current.json')
+    for (username, author_data) in authors_now.items():
+        author = Author.from_gh_data(username, author_data)
+        db.session.add(author)
+    GithubQueryLog.log('authors')
+    db.session.commit()
 
 def fetch_issues():
     gh = drafts_api
     fetch = Fetch('')
-    issues = gh.fetch_issues()
-    fetch.save_data(issues, '_data/issues.json')
+    issues = drafts_api.fetch_issues()
+
+    gh = GitHub('blog-drafts', '18F')
+    fetch = Fetch('')
+
+    # clear all issues - what about milestones?
+    Milestone.query.delete()
+    Issue.query.delete()
+    for issue_data in issues:
+        issue = Issue.from_dict(issue_data)
+        db.session.add(issue)
+        milestones = gh.fetch_milestone(issue.number)
+        for milestone_data in milestones:
+            issue.milestones.append(Milestone.from_dict(milestone_data))
+    GithubQueryLog.log('issues')
+    db.session.commit()
 
 def fetch_issue_events(number, part=None, name=None):
     gh = drafts_api
@@ -90,37 +127,18 @@ def load_data():
     data = {}
     today = date.today().strftime("%Y-%m")
 
-    if os.path.isfile("_data/{0}.json".format(today)) is False:
-        fetch_authors(today)
-
-    # if we don't have a data file for the issues, fetch and save the issues
-    if os.path.isfile("_data/issues.json") is False:
+    if not GithubQueryLog.was_fetched_today('authors'):
+        fetch_authors()
+    if not GithubQueryLog.was_fetched_today('issues'):
         fetch_issues()
 
-    # Now the the file exists, get some info about it to determine if it's stale
-    issues = fetch.get_data_from_file("_data/issues.json")
-    issues_stat = os.stat("_data/issues.json")
-    m_time = date.fromtimestamp(issues_stat.st_mtime)
-    today = date.today()
+    for m in Month.query:
+        data[str(m)] = m.authors
+    data['current'] = Author.query.all()
+    data['issues'] = Issue.query.all()
+    for issue in Issue.query:
+        data['issue-{0}-milestones'.format(issue.number)] = issue.milestones
 
-    # if the issues json file was last modified before today, refresh the issues
-    if m_time < today:
-        fetch_issues()
-
-    # Fetch the milestone for each issue as json
-    for i in issues:
-        number = i['number']
-        milestones = "_data/issue-%s-milestones.json" % number
-        if os.path.isfile(milestones) is False:
-            fetch_draft_milestone(number)
-
-        if date.fromtimestamp(os.stat(milestones).st_mtime) < date.today():
-            fetch_draft_milestone(number)
-
-    # add each file in _data to a global `data` dict
-    for f in os.listdir('_data'):
-        if f[0] != ".":
-            data[f.split('.')[0]] = fetch.get_data_from_file('_data/%s' % f)
     return dict(data=data)
 
 @app.route("/")

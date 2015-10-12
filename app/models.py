@@ -1,27 +1,60 @@
-from datetime import datetime
+import calendar
+from datetime import date, datetime
 from . import db
 from .utils import to_python_datetime
 
 
 author_months = db.Table('author_months',
-    db.Column('month_id', db.Integer, db.ForeignKey('month.id')),
+    db.Column('month_begin', db.Integer, db.ForeignKey('month.begin')),
     db.Column('author_id', db.Integer, db.ForeignKey('author.id'))
     )
 
 
 class Month(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(), unique=True)
+    begin = db.Column(db.Date(), primary_key=True)
     authors = db.relationship('Author', secondary=author_months,
         backref=db.backref('months', lazy='dynamic'))
+
+    def __str__(self):
+        return '{0}-{1}'.format(self.begin.year, self.begin.month)
+
+    @classmethod
+    def get_or_create(cls, first_day):
+        return cls.query.get(first_day) or cls(begin=first_day)
+
+    def next(self):
+        if self.begin.month == 12:
+            next_begin = date(self.begin.year+1, 1, 1)
+        else:
+            next_begin = date(self.begin.year, self.begin.month+1, 1)
+        return self.get_or_create(next_begin)
+
+    def end(self):
+        last_day = calendar.monthrange(self.begin.year, self.begin.month)[1]
+        return date(self.begin.year, self.begin.month, last_day)
+
+    def author_list_is_complete(self):
+        GithubQueryLog.last_query_datetime('authors').date() > self.end()
 
 
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String())
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
     full_name = db.Column(db.String())
     url = db.Column(db.String(), nullable=True)
+
+    @classmethod
+    def from_gh_data(cls, username, dct):
+        "Finds and updates, or creates, instance based on ``from_gh_data``."
+        author = cls.query.filter_by(username=username).first()
+        if author:
+            for field in ('first_name', 'last_name', 'full_name', 'url'):
+                setattr(author, field, dct.get(field))
+        else:
+            author = cls(username=username, **dct)
+        return author
 
 
 class GithubQueryLog(db.Model):
@@ -30,7 +63,7 @@ class GithubQueryLog(db.Model):
     queried_at = db.Column(db.DateTime(), default=datetime.now)
 
     @classmethod
-    def _last_query_datetime(cls, query_type):
+    def last_query_datetime(cls, query_type):
         qlog = cls.query.filter_by(query_type=query_type).first()
         if qlog:
             return qlog.queried_at
@@ -39,7 +72,7 @@ class GithubQueryLog(db.Model):
 
     @classmethod
     def was_fetched_today(cls, query_type):
-        return (cls._last_query_datetime(query_type).date() >=
+        return (cls.last_query_datetime(query_type).date() >=
                 datetime.today().date())
 
     @classmethod
