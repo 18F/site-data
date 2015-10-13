@@ -9,6 +9,7 @@ python:
 
 before_script:
   - pip install -r requirements.txt
+  - python manage.py db upgrade
 
 script: nosetests -s
 
