@@ -57,7 +57,7 @@ def deploy():
 @manager.command
 def clean_db():
     for tbl in reversed(db.metadata.sorted_tables):
-        db.engine.execute(db.metadata.sorted_tables[0].delete())
+        db.engine.execute(tbl.delete())
 
 if __name__ == "__main__":
     manager.run()

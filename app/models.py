@@ -2,7 +2,7 @@ import calendar
 from functools import total_ordering
 from datetime import date, datetime
 from . import db
-from .utils import to_python_datetime
+from lib.utils import to_python_datetime
 
 
 author_months = db.Table('author_months',

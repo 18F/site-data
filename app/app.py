@@ -79,14 +79,8 @@ def fetch_authors():
     db.session.commit()
 
 def fetch_issues():
-    gh = drafts_api
-    fetch = Fetch('')
-    issues = drafts_api.fetch_issues()
-
     gh = GitHub('blog-drafts', '18F')
-    fetch = Fetch('')
-
-    # clear all issues - what about milestones?
+    issues = drafts_api.fetch_issues()
     Milestone.query.delete()
     Issue.query.delete()
     for issue_data in issues:
@@ -124,9 +118,7 @@ def load_date():
 
 @app.context_processor
 def load_data():
-    fetch = Fetch('')
     data = {}
-    today = date.today().strftime("%Y-%m")
 
     if not GithubQueryLog.was_fetched_today('authors'):
         fetch_authors()
@@ -134,7 +126,6 @@ def load_data():
         fetch_issues()
 
     data['months'] = Month.query.filter(Month.authors)
-    # {str(m): m.authors for m in Month.query}
     data['current'] = Author.query.all()
     data['issues'] = Issue.query.all()
     for issue in Issue.query:
@@ -170,17 +161,3 @@ def data(filename):
     else:
         response = make_response("not found", 404)
     return response
-
-if __name__ == "__main__":
-    app.port=port
-    if os.path.isdir("_data") is False:
-        os.mkdir("_data")
-    if os.environ['ENV'] == 'local':
-        app.logger.debug('A value for debugging')
-        app.logger.warning('A warning occurred (%d apples)', 42)
-        app.logger.error('An error occurred')
-        app.debug = True
-        app.run(host='0.0.0.0', port=port)
-    else:
-        serve(app, port=port)
-        app.debug = False
