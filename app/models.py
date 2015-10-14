@@ -79,11 +79,6 @@ class GithubQueryLog(db.Model):
             return datetime.fromtimestamp(0)
 
     @classmethod
-    def was_fetched_today(cls, query_type):
-        return (cls.last_query_datetime(query_type).date() >=
-                datetime.today().date())
-
-    @classmethod
     def log(cls, query_type):
         qlog = cls.query.filter_by(query_type=query_type).first()
         if qlog:
@@ -151,11 +146,19 @@ class Issue(db.Model):
     closed_at = db.Column(db.DateTime(), nullable=True)
     labels = db.relationship('Label', secondary=labels_issues,
         backref=db.backref('issues', lazy='dynamic'))
-    milestones = db.relationship('Milestone')
+    milestones = db.relationship('Milestone', cascade='all, delete-orphan')
 
     @classmethod
-    def from_dict(cls, issue_data):
-        "Given dict of issue data fetched from GitHub API, return instance"
+    def from_gh_data(cls, issue_data):
+        """Given dict of issue data fetched from GitHub API, return instance.
+
+        If the issue already exists, delete it (and its milestones)
+        and replace it."""
+        issue = cls.query.filter_by(number=issue_data.get('number')).first()
+        if issue:
+            db.session.delete(issue)
+        # cls.query.filter_by(number=issue_data.get('number')).delete()
+        db.session.commit()
         insertable = {
             'id': issue_data.get('id'),
             'number': issue_data.get('number'),
@@ -174,5 +177,6 @@ class Issue(db.Model):
         issue = cls(**insertable)
         for label_data in issue_data['labels']:
             issue.labels.append(Label.get_or_create(label_data))
-
+        db.session.add(issue)
+        db.session.commit()
         return issue

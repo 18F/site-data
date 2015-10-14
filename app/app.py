@@ -68,7 +68,7 @@ def create_months():
         month = month.next()
     db.session.commit()
 
-def fetch_authors():
+def fetch_authors(since):
     create_months()
     fetch = Fetch('https://18f.gsa.gov/api/data/authors.json')
     authors_now = fetch.get_data_from_url()
@@ -78,15 +78,11 @@ def fetch_authors():
     GithubQueryLog.log('authors')
     db.session.commit()
 
-def fetch_issues():
-    gh = GitHub('blog-drafts', '18F')
-    issues = drafts_api.fetch_issues()
-    Milestone.query.delete()
-    Issue.query.delete()
+def fetch_issues(since):
+    issues = drafts_api.fetch_issues(since=since)
     for issue_data in issues:
-        issue = Issue.from_dict(issue_data)
-        db.session.add(issue)
-        milestones = gh.fetch_milestone(issue.number)
+        issue = Issue.from_gh_data(issue_data)
+        milestones = drafts_api.fetch_milestone(issue.number)
         for milestone_data in milestones:
             issue.milestones.append(Milestone.from_dict(milestone_data))
     GithubQueryLog.log('issues')
@@ -99,31 +95,16 @@ def fetch_issue_events(number, part=None, name=None):
     if events != []:
         fetch.save_data(events, '_data/events-%s.json' % number )
 
-def fetch_draft_milestone(i):
-    gh = GitHub('blog-drafts', '18F')
-    fetch = Fetch('')
-    milestones = gh.fetch_milestone(i)
-    fetch.save_data(milestones, '_data/issue-%s-milestones.json' % i)
-
-@app.context_processor
-def load_date():
-    current = date.today().strftime("%B")
-    curr_year = date.today().year
-    curr_month = date.today().month
-    prev = date(curr_year, curr_month, day=1) - timedelta(days=1)
-    report = dict(string = prev.strftime("%B %Y"))
-    report['formatted'] = prev.strftime("%Y-%m")
-    report['date'] = prev
-    return dict(date=report)
-
 @app.context_processor
 def load_data():
     data = {}
 
-    if not GithubQueryLog.was_fetched_today('authors'):
-        fetch_authors()
-    if not GithubQueryLog.was_fetched_today('issues'):
-        fetch_issues()
+    last_query = GithubQueryLog.last_query_datetime('authors')
+    if last_query.date() < date.today():
+        fetch_authors(since=last_query)
+    last_query = GithubQueryLog.last_query_datetime('issues')
+    if last_query.date() < date.today():
+        fetch_issues(since=last_query)
 
     data['months'] = Month.query.filter(Month.authors)
     data['current'] = Author.query.all()
