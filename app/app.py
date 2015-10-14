@@ -7,7 +7,7 @@ from waitress import serve
 import requests, json
 import yaml, os
 from sassutils.wsgi import SassMiddleware
-from .models import GithubQueryLog, Author, Issue, Milestone, Month, db
+from .models import GithubQueryLog, Author, Issue, Milestone, Month, Event, db
 
 app = Flask(__name__)
 scss_manifest = {app.name: ('static/sass', 'static/css', 'static/css')}
@@ -84,7 +84,10 @@ def fetch_issues(since):
         issue = Issue.from_gh_data(issue_data)
         milestones = drafts_api.fetch_milestone(issue.number)
         for milestone_data in milestones:
-            issue.milestones.append(Milestone.from_dict(milestone_data))
+            issue.milestones.append(Milestone.from_gh_data(milestone_data))
+        events = drafts_api.fetch_issue_events(issue.number)
+        for event_data in events:
+            issue.events.append(Event.from_gh_data(event_data))
     GithubQueryLog.log('issues')
     db.session.commit()
 

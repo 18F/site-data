@@ -107,6 +107,27 @@ class Label(db.Model):
         return label
 
 
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    commit_id = db.Column(db.Integer)
+    url = db.Column(db.String())
+    actor = db.Column(db.String())
+    event = db.Column(db.String())
+    created_at = db.Column(db.DateTime())
+    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
+
+    @classmethod
+    def from_gh_data(cls, event_data):
+        "Given dict of event data fetched from GitHub API, return instance"
+        return cls(id=event_data['id'],
+                   commit_id=event_data['commit_id'],
+                   url=event_data['url'],
+                   actor=event_data['actor']['login'],
+                   event=event_data['event'],
+                   created_at=to_python_datetime(event_data.get('created_at')),
+            )
+
+
 class Milestone(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
@@ -116,7 +137,7 @@ class Milestone(db.Model):
     issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
 
     @classmethod
-    def from_dict(cls, milestone_data):
+    def from_gh_data(cls, milestone_data):
         "Given dict of milestone data fetched from GitHub API, return instance"
         return cls(id=milestone_data['id'],
             title=milestone_data['milestone']['title'],
@@ -147,6 +168,7 @@ class Issue(db.Model):
     labels = db.relationship('Label', secondary=labels_issues,
         backref=db.backref('issues', lazy='dynamic'))
     milestones = db.relationship('Milestone', cascade='all, delete-orphan')
+    events = db.relationship('Event', cascade='all, delete-orphan')
 
     @classmethod
     def from_gh_data(cls, issue_data):
