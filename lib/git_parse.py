@@ -79,11 +79,11 @@ class GitHub():
         else:
             return False
 
-    def fetch_issues(self, **params):
+    def fetch_issues(self, since=_BEGINNING_OF_TIME, **params):
         try:
-            params['since'] = params['since'].strftime(_GH_DATE_FORMAT)
+            params['since'] = since.strftime(_GH_DATE_FORMAT)
         except AttributeError:
-            pass  # did not need conversion to string
+            params['since'] = since # did not need str conversion 
         params['per_page'] = params.get('per_page', 100)
         params['sort'] = 'updated'
         params['direction'] = 'asc'
