@@ -9,7 +9,7 @@ from lib.fetch import Fetch
 
 author_months = db.Table(
     'author_months',
-    db.Column('month_begin', db.Integer, db.ForeignKey('month.begin')),
+    db.Column('month_begin', db.Date(), db.ForeignKey('month.begin')),
     db.Column('author_id', db.Integer, db.ForeignKey('author.id')))
 
 

@@ -62,7 +62,7 @@ def upgrade():
     sa.PrimaryKeyConstraint('begin')
     )
     op.create_table('author_months',
-    sa.Column('month_begin', sa.Integer(), nullable=True),
+    sa.Column('month_begin', sa.Date(), nullable=True),
     sa.Column('author_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['author_id'], ['author.id'], ),
     sa.ForeignKeyConstraint(['month_begin'], ['month.begin'], )
