@@ -2,6 +2,7 @@ import os, requests, yaml
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
 
+
 class GitHub():
     def __init__(self, repo, owner):
         """Sets up the class
@@ -61,8 +62,10 @@ class GitHub():
         This will fetch all the data about 18F/18f.gsa.gov (see __init__)
         Example: gh.fetch_endpoint('issues?per_page=100')
         This will fetch the 100 most recent issues on gh.owner/gh.repo"""
-        git_url = "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo, endpoint)
-        content = requests.get(git_url, params=params,
+        git_url = "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo,
+                                         endpoint)
+        content = requests.get(git_url,
+                               params=params,
                                auth=HTTPBasicAuth(self.user, self.auth))
         if (content.ok):
             return content
@@ -80,7 +83,7 @@ class GitHub():
         try:
             params['since'] = params['since'].strftime(_GH_DATE_FORMAT)
         except AttributeError:
-            pass # did not need conversion to string
+            pass  # did not need conversion to string
         params['per_page'] = params.get('per_page', 100)
         params['sort'] = 'updated'
         params['direction'] = 'asc'
@@ -93,7 +96,8 @@ class GitHub():
             # check all results, alas
             params['since'] = _latest_update(new_issues)
             issues = self.fetch_endpoint('issues', params=params)
-            new_issues = [i for i in issues.json() if i['number'] not in result]
+            new_issues = [i for i in issues.json() if i['number'] not in result
+                          ]
         return result.values()
 
     def split_by_event(self, events, part):
@@ -132,14 +136,19 @@ class GitHub():
         while i < len(data):
             if data[i].get(key).startswith(match):
                 matches.append(data[i].get(key))
-            i = i+1
+            i = i + 1
         return matches
+
+
+site_api = GitHub('18f.gsa.gov', '18F')
+drafts_api = GitHub('blog-drafts', '18F')
 
 _GH_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 _BEGINNING_OF_TIME = '1970-01-01T00:00:00Z'
+
+
 def _latest_update(items, field_name='updated_at'):
     "Returns latest `field_name` in `items`"
     updates = [datetime.strptime(i.get(field_name, _BEGINNING_OF_TIME),
-                                 _GH_DATE_FORMAT)
-               for i in items]
+                                 _GH_DATE_FORMAT) for i in items]
     return max(updates).strftime(_GH_DATE_FORMAT)

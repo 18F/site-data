@@ -1,20 +1,26 @@
 import calendar
 from functools import total_ordering
 from datetime import date, datetime
+import yaml
 from . import db
 from lib.utils import to_python_datetime
+from lib.git_parse import drafts_api, site_api
+from lib.fetch import Fetch
 
-
-author_months = db.Table('author_months',
+author_months = db.Table(
+    'author_months',
     db.Column('month_begin', db.Integer, db.ForeignKey('month.begin')),
-    db.Column('author_id', db.Integer, db.ForeignKey('author.id'))
-    )
+    db.Column('author_id', db.Integer, db.ForeignKey('author.id')))
+
 
 @total_ordering
 class Month(db.Model):
     begin = db.Column(db.Date(), primary_key=True)
-    authors = db.relationship('Author', secondary=author_months,
-        backref=db.backref('months', lazy='dynamic'))
+    authors = db.relationship('Author',
+                              secondary=author_months,
+                              backref=db.backref('months',
+                                                 lazy='dynamic'),
+                              collection_class=set)
 
     def __str__(self):
         return '{0}-{1}'.format(self.begin.year, self.begin.month)
@@ -25,9 +31,9 @@ class Month(db.Model):
 
     def next(self):
         if self.begin.month == 12:
-            next_begin = date(self.begin.year+1, 1, 1)
+            next_begin = date(self.begin.year + 1, 1, 1)
         else:
-            next_begin = date(self.begin.year, self.begin.month+1, 1)
+            next_begin = date(self.begin.year, self.begin.month + 1, 1)
         return self.get_or_create(next_begin)
 
     def end(self):
@@ -43,7 +49,47 @@ class Month(db.Model):
     def __gt__(self, other):
         return self.begin > other.begin
 
+    def _date_range(self):
+        month_begin = "{0}-01".format(self)
+        month_end = "{0}-{1}".format(self, self.end().day)
+        return {"since": month_begin, "until": month_end}
+
+    def fetch_authors(self):
+        "Fetches from github blog authors as of this month"
+        commits = site_api.fetch_commits(self._date_range())
+        if commits:
+            authors = yaml.load(site_api.file_at_commit(commits[0]['sha'],
+                                                        '_data/authors.yml'))
+        return authors or {}
+
+    @classmethod
+    def create_missing(cls):
+        "Populate DB with all months up to today, including their authors."
+        FIRST_MONTH_OF_BLOG = date(2014, 3, 1)
+        month = cls.get_or_create(FIRST_MONTH_OF_BLOG)
+        while month.begin <= date.today():
+            db.session.add(month)
+            if (not month.authors) or (not month.author_list_is_complete()):
+                for (username, author_data) in month.fetch_authors().items():
+                    # TODO: add an if, unless set collection_class
+                    month.authors.add(Author.from_gh_data(username,
+                                                          author_data))
+            month = month.next()
+        db.session.commit()
+
+    def __eq__(self, other):
+        return self.begin == other.begin
+
+    def __gt__(self, other):
+        return self.begin > other.begin
+
     # other comparison operators automagically inferred by `total_ordering`
+
+    def _date_range(self):
+        month_begin = "{0}-01".format(self)
+        month_end = "{0}-{1}".format(self, self.end().day)
+        return {"since": month_begin, "until": month_end}
+
 
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -63,6 +109,17 @@ class Author(db.Model):
         else:
             author = cls(username=username, **dct)
         return author
+
+    @classmethod
+    def fetch(cls):
+        Month.create_missing()
+        fetch = Fetch('https://18f.gsa.gov/api/data/authors.json')
+        authors_now = fetch.get_data_from_url()
+        for (username, author_data) in authors_now.items():
+            author = cls.from_gh_data(username, author_data)
+            db.session.add(author)
+        GithubQueryLog.log('authors')
+        db.session.commit()
 
 
 class GithubQueryLog(db.Model):
@@ -88,10 +145,10 @@ class GithubQueryLog(db.Model):
         db.session.add(qlog)
 
 
-labels_issues = db.Table('labels_issues',
+labels_issues = db.Table(
+    'labels_issues',
     db.Column('label_id', db.Integer, db.ForeignKey('label.id')),
-    db.Column('issue_id', db.Integer, db.ForeignKey('issue.id'))
-    )
+    db.Column('issue_id', db.Integer, db.ForeignKey('issue.id')))
 
 
 class Label(db.Model):
@@ -119,13 +176,13 @@ class Event(db.Model):
     @classmethod
     def from_gh_data(cls, event_data):
         "Given dict of event data fetched from GitHub API, return instance"
-        return cls(id=event_data['id'],
-                   commit_id=event_data['commit_id'],
-                   url=event_data['url'],
-                   actor=event_data['actor']['login'],
-                   event=event_data['event'],
-                   created_at=to_python_datetime(event_data.get('created_at')),
-            )
+        return cls(
+            id=event_data['id'],
+            commit_id=event_data['commit_id'],
+            url=event_data['url'],
+            actor=event_data['actor']['login'],
+            event=event_data['event'],
+            created_at=to_python_datetime(event_data.get('created_at')), )
 
 
 class Milestone(db.Model):
@@ -139,12 +196,12 @@ class Milestone(db.Model):
     @classmethod
     def from_gh_data(cls, milestone_data):
         "Given dict of milestone data fetched from GitHub API, return instance"
-        return cls(id=milestone_data['id'],
+        return cls(
+            id=milestone_data['id'],
             title=milestone_data['milestone']['title'],
             commit_id=milestone_data.get('commit_id'),
             created_at=to_python_datetime(milestone_data.get('created_at')),
-            url=milestone_data.get('url'),
-            )
+            url=milestone_data.get('url'), )
 
 
 class Issue(db.Model):
@@ -165,8 +222,10 @@ class Issue(db.Model):
     created_at = db.Column(db.DateTime(), default=datetime.now)
     updated_at = db.Column(db.DateTime(), default=datetime.now)
     closed_at = db.Column(db.DateTime(), nullable=True)
-    labels = db.relationship('Label', secondary=labels_issues,
-        backref=db.backref('issues', lazy='dynamic'))
+    labels = db.relationship('Label',
+                             secondary=labels_issues,
+                             backref=db.backref('issues',
+                                                lazy='dynamic'))
     milestones = db.relationship('Milestone', cascade='all, delete-orphan')
     events = db.relationship('Event', cascade='all, delete-orphan')
 
@@ -195,10 +254,33 @@ class Issue(db.Model):
             'updated_at': to_python_datetime(issue_data['updated_at']),
             'created_at': to_python_datetime(issue_data['created_at']),
             'closed_at': to_python_datetime(issue_data['closed_at']),
-            }
+        }
         issue = cls(**insertable)
         for label_data in issue_data['labels']:
             issue.labels.append(Label.get_or_create(label_data))
         db.session.add(issue)
         db.session.commit()
         return issue
+
+    @classmethod
+    def fetch(cls, since):
+        issues = drafts_api.fetch_issues(since=since)
+        for issue_data in issues:
+            issue = cls.from_gh_data(issue_data)
+            milestones = drafts_api.fetch_milestone(issue.number)
+            for milestone_data in milestones:
+                issue.milestones.append(Milestone.from_gh_data(milestone_data))
+            events = drafts_api.fetch_issue_events(issue.number)
+            for event_data in events:
+                issue.events.append(Event.from_gh_data(event_data))
+        GithubQueryLog.log('issues')
+        db.session.commit()
+
+
+def update_db_from_github():
+    last_query = GithubQueryLog.last_query_datetime('authors')
+    if last_query.date() < date.today():
+        Author.fetch()
+    last_query = GithubQueryLog.last_query_datetime('issues')
+    if last_query.date() < date.today():
+        Issue.fetch(since=last_query)
