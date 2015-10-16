@@ -7,6 +7,7 @@ Werkzeug==0.10.4
 cookies==2.2.1
 coverage==3.7.1
 funcsigs==0.4
+honcho==0.6.6
 itsdangerous==0.24
 libsass==0.8.3
 mock==1.1.2
