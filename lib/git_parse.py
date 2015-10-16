@@ -2,6 +2,9 @@ import os, requests, yaml
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
 
+_GH_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
+_BEGINNING_OF_TIME = '1970-01-01T00:00:00Z'
+
 
 class GitHub():
     def __init__(self, repo, owner):
@@ -83,7 +86,7 @@ class GitHub():
         try:
             params['since'] = since.strftime(_GH_DATE_FORMAT)
         except AttributeError:
-            params['since'] = since # did not need str conversion 
+            params['since'] = since  # did not need str conversion
         params['per_page'] = params.get('per_page', 100)
         params['sort'] = 'updated'
         params['direction'] = 'asc'
@@ -142,9 +145,6 @@ class GitHub():
 
 site_api = GitHub('18f.gsa.gov', '18F')
 drafts_api = GitHub('blog-drafts', '18F')
-
-_GH_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
-_BEGINNING_OF_TIME = '1970-01-01T00:00:00Z'
 
 
 def _latest_update(items, field_name='updated_at'):
