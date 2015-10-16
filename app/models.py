@@ -3,7 +3,7 @@ from functools import total_ordering
 from datetime import date, datetime
 import yaml
 from . import db
-from lib.utils import to_python_datetime
+from lib.utils import to_py_date
 from lib.git_parse import drafts_api, site_api
 from lib.fetch import Fetch
 
@@ -170,7 +170,7 @@ class Event(db.Model):
     url = db.Column(db.String())
     actor = db.Column(db.String())
     event = db.Column(db.String())
-    created_at = db.Column(db.DateTime())
+    created_at = db.Column(db.Date())
     issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
 
     @classmethod
@@ -182,14 +182,14 @@ class Event(db.Model):
             url=event_data['url'],
             actor=event_data['actor']['login'],
             event=event_data['event'],
-            created_at=to_python_datetime(event_data.get('created_at')), )
+            created_at=to_py_date(event_data.get('created_at')), )
 
 
 class Milestone(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     commit_id = db.Column(db.String(), nullable=True)
-    created_at = db.Column(db.DateTime(), default=datetime.now)
+    created_at = db.Column(db.Date(), default=date.today)
     url = db.Column(db.String())
     issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
 
@@ -200,7 +200,7 @@ class Milestone(db.Model):
             id=milestone_data['id'],
             title=milestone_data['milestone']['title'],
             commit_id=milestone_data.get('commit_id'),
-            created_at=to_python_datetime(milestone_data.get('created_at')),
+            created_at=to_py_date(milestone_data.get('created_at')),
             url=milestone_data.get('url'), )
 
 
@@ -219,9 +219,9 @@ class Issue(db.Model):
     labels_url = db.Column(db.String(), nullable=True)
     comments_url = db.Column(db.String(), nullable=True)
     html_url = db.Column(db.String(), nullable=True)
-    created_at = db.Column(db.DateTime(), default=datetime.now)
-    updated_at = db.Column(db.DateTime(), default=datetime.now)
-    closed_at = db.Column(db.DateTime(), nullable=True)
+    created_at = db.Column(db.Date(), default=date.today)
+    updated_at = db.Column(db.Date(), default=date.today)
+    closed_at = db.Column(db.Date(), nullable=True)
     labels = db.relationship('Label',
                              secondary=labels_issues,
                              backref=db.backref('issues',
@@ -251,9 +251,9 @@ class Issue(db.Model):
             'labels_url': issue_data.get('labels_url'),
             'html_url': issue_data.get('html_url'),
             'events_url': issue_data.get('events_url'),
-            'updated_at': to_python_datetime(issue_data['updated_at']),
-            'created_at': to_python_datetime(issue_data['created_at']),
-            'closed_at': to_python_datetime(issue_data['closed_at']),
+            'updated_at': to_py_date(issue_data['updated_at']),
+            'created_at': to_py_date(issue_data['created_at']),
+            'closed_at': to_py_date(issue_data['closed_at']),
         }
         issue = cls(**insertable)
         for label_data in issue_data['labels']:
@@ -277,10 +277,10 @@ class Issue(db.Model):
         db.session.commit()
 
 
-def update_db_from_github():
+def update_db_from_github(refresh_timedelta):
     last_query = GithubQueryLog.last_query_datetime('authors')
-    if last_query.date() < date.today():
+    if (datetime.now() - last_query) > refresh_timedelta:
         Author.fetch()
     last_query = GithubQueryLog.last_query_datetime('issues')
-    if last_query.date() < date.today():
+    if (datetime.now() - last_query) > refresh_timedelta:
         Issue.fetch(since=last_query)

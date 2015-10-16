@@ -1,13 +1,13 @@
 """empty message
 
-Revision ID: 34a7521588d
+Revision ID: 3291788d2a4f
 Revises: None
-Create Date: 2015-10-14 21:05:09.493059
+Create Date: 2015-10-16 10:57:01.187022
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '34a7521588d'
+revision = '3291788d2a4f'
 down_revision = None
 
 from alembic import op
@@ -45,9 +45,9 @@ def upgrade():
     sa.Column('labels_url', sa.String(), nullable=True),
     sa.Column('comments_url', sa.String(), nullable=True),
     sa.Column('html_url', sa.String(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('closed_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.Date(), nullable=True),
+    sa.Column('updated_at', sa.Date(), nullable=True),
+    sa.Column('closed_at', sa.Date(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('label',
@@ -73,7 +73,7 @@ def upgrade():
     sa.Column('url', sa.String(), nullable=True),
     sa.Column('actor', sa.String(), nullable=True),
     sa.Column('event', sa.String(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.Date(), nullable=True),
     sa.Column('issue_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['issue_id'], ['issue.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -88,7 +88,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(), nullable=True),
     sa.Column('commit_id', sa.String(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.Date(), nullable=True),
     sa.Column('url', sa.String(), nullable=True),
     sa.Column('issue_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['issue_id'], ['issue.id'], ),

@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -12,6 +13,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'postgresql:///site-data-dev'
+    REFRESH_TIMEDELTA = timedelta(minutes=1)
 
 
 class TestingConfig(Config):
@@ -19,11 +21,13 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
         'postgresql:///site-data-test'
     WTF_CSRF_ENABLED = False
+    REFRESH_TIMEDELTA = timedelta(minutes=1)
 
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'postgresql:///site-data'
+    REFRESH_TIMEDELTA = timedelta(hours=24)
 
 
 config = {

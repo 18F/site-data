@@ -1,7 +1,6 @@
-from datetime import date, time, timedelta
+from datetime import date
 from flask import Flask, request, render_template, make_response, Response
 from lib.git_parse import GitHub
-from lib.fetch import Fetch
 from functools import wraps
 from waitress import serve
 import requests, json
@@ -15,8 +14,6 @@ scss_manifest = {app.name: ('static/sass', 'static/css', 'static/css')}
 # Middleware
 app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
 
-drafts_api = GitHub('blog-drafts', '18F')
-site_api = GitHub('18f.gsa.gov', '18F')
 servers = {"production": os.environ['PROD'], "staging": os.environ['STAGING']}
 
 
@@ -50,7 +47,7 @@ def requires_auth(f):
 
 @app.context_processor
 def load_data():
-    update_db_from_github()
+    update_db_from_github(refresh_timedelta=app.config['REFRESH_TIMEDELTA'])
     data = {
         'months': Month.query.filter(Month.authors),
         'current': Author.query.all(),
