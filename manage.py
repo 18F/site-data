@@ -4,8 +4,6 @@ from flask.ext.migrate import Migrate, MigrateCommand
 from app.app import app
 from lib.git_parse import GitHub
 from lib.fetch import Fetch
-# from blog.issues import Drafts
-# from blog.authors import Authors
 from datetime import date
 from os import path, stat, environ
 from waitress import serve
@@ -35,9 +33,9 @@ def updatedata():
     authors  = Authors()
     drafts   = Drafts()
     today = date.today().strftime("%Y-%m")
-    print "Fetching authors"
+    print("Fetching authors")
     authors.fetch_all(today)
-    print "Fetching drafts"
+    print("Fetching drafts")
     drafts.fetch_all()
 
     if path.exists('_data/issues.json'):
@@ -47,7 +45,7 @@ def updatedata():
         for i in issues:
             number = i['number']
             milestones = "_data/issue-%s-milestones.json" % number
-            print "Fetching milestones for %s" % number
+            print("Fetching milestones for %s" % number)
             drafts.fetch_milestone(number)
 
 @manager.command

@@ -106,7 +106,7 @@ def test_GitHub_fetch_commits_request_ok(m):
     url = "%s/repos/%s/%s/%s" % (g.api, g.owner, g.repo, endpoint)
     m.get(url, content='[{"name": "18f.gsa.gov"}]', status_code=200)
     actual = g.fetch_commits()
-    assert actual == [{u'name': u'18f.gsa.gov'}]
+    assert actual == [{'name': '18f.gsa.gov'}]
 
 @requests_mock.mock()
 def test_GitHub_fetch_issues(m):
