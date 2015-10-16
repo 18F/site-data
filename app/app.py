@@ -47,7 +47,6 @@ def fetch_authors(target):
     month_end = "{0}-{1}".format(target, month_end[1])
     commit_range = {"since":month_begin, "until":month_end}
     commits = site_api.fetch_commits(commit_range)
-
     authors_then = yaml.load(site_api.file_at_commit(commits[0]['sha'], '_data/authors.yml'))
     authors_now = fetch.get_data_from_url()
 
@@ -127,6 +126,11 @@ def load_data():
 @requires_auth
 def index():
     return render_template("index.html")
+
+@app.route("/dashboard")
+@requires_auth
+def dashboard():
+    return render_template("dashboard.html")
 
 @app.route("/manage/")
 @requires_auth
