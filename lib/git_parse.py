@@ -90,8 +90,10 @@ class GitHub():
         params['per_page'] = params.get('per_page', 100)
         params['sort'] = 'updated'
         params['direction'] = 'asc'
-        result = {}
         issues = self.fetch_endpoint('issues', params=params)
+        if not issues:
+            return False
+        result = {}
         new_issues = [i for i in issues.json() if i['number'] not in result]
         while new_issues:
             result.update({i['number']: i for i in new_issues})

@@ -112,8 +112,8 @@ def test_GitHub_fetch_commits_request_ok(m):
 def test_GitHub_fetch_issues(m):
     g= GitHub('18f.gsa.gov', '18F')
     url = "%s/repos/%s/%s/issues?per_page=100" % (g.api, g.owner, g.repo)
-    expected = [dict()]*100
-    m.get(url, content=expected.__str__(), status_code=200, headers={'Content-Type': 'application/json'})
+    expected = [{"number": i} for i in range(100)]
+    m.get(url, content=json.dumps(expected), status_code=200, headers={'Content-Type': 'application/json'})
     actual = g.fetch_issues()
     assert actual == expected
 
