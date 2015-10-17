@@ -1,56 +1,8 @@
-from lib.fetch import Fetch
-from lib.git_parse import GitHub
-import os, nose, json, requests, requests_mock
+from lib.git_parse import GitHub, drafts_api, GH_DATE_FORMAT
+import os, nose, json, requests, requests_mock, datetime
 from nose.tools import with_setup
 from nose.plugins.skip import Skip, SkipTest
-
-### Setup methods ###
-def setup():
-    if os.path.exists("/tmp/_data"):
-        pass
-    else:
-        os.mkdir("/tmp/_data")
-
-def teardown():
-    if os.path.isfile('/tmp/_data/test.json'):
-        os.remove("/tmp/_data/test.json")
-    else:
-        pass
-
-### Fetch module tests ###
-
-@with_setup(setup, teardown)
-@requests_mock.mock()
-def test_Fetch_get_data_from_url(m):
-    f = Fetch('https://example.com')
-    expected = dict()
-    m.get("https://example.com", content=expected, status_code=200)
-    actual = f.get_data_from_url()
-    assert expected == actual
-
-@with_setup(setup, teardown)
-def test_Fetch_save_data():
-    f = Fetch('https://example.com')
-    data = dict(test="value")
-    filename = "/tmp/_data/test.json"
-    f.save_data(data, filename)
-    assert os.path.isfile(filename)
-
-@with_setup(setup, teardown)
-def test_Fetch_save_data_w_str_expects_False():
-    f = Fetch('https://example.com')
-    data = str("value")
-    filename = "/tmp/_data/test.json"
-    assert f.save_data(data, filename) is False
-
-@with_setup(setup, teardown)
-def test_Fetch_get_data_from_file():
-    f = Fetch("")
-    data = dict(test="value")
-    filename = "/tmp/_data/test.json"
-    open(filename, 'w').write(json.dumps(data))
-    target = f.get_data_from_file(filename)
-    assert target == data
+from app.app import app
 
 ### GitHub Module tests ###
 
@@ -150,3 +102,42 @@ def test_GitHub_parse_by_key():
     data = [{"name":"data-push"},{"name":"data-pull"},{"name":"nondata-push"}]
     actual = g.parse_by_key(data, 'name', 'data')
     assert expected.sort() == actual.sort()
+
+def _issues(start=datetime.datetime(2015, 1, 1), n_issues = 100, offset=0):
+    return [{
+        'number': i,
+        'updated_at': (start + datetime.timedelta(days=i)).strftime(GH_DATE_FORMAT)
+    } for i in range(offset, offset + n_issues)]
+
+@requests_mock.mock()
+def test_GitHub_fetch_issues(m):
+    expected = json.dumps(_issues())
+    m.get(drafts_api.git_url('issues'), content=expected, status_code=200,
+          headers={'Content-Type': 'application/json'})
+    actual = drafts_api.fetch_issues()
+    assert json.loads(expected) == actual
+
+@requests_mock.mock()
+def test_GitHub_fetch_assembles_multiple_pages(m):
+
+    def _register_get(since, content):
+        url = '{0}?sort=updated&per_page=10&direction=asc&since={1}'.format(
+            drafts_api.git_url('issues'),
+            since
+        )
+        app.logger.info('registering mock for {0}'.format(url))
+        m.get(url, content=content, complete_qs=False,
+            status_code=200, headers={'Content-Type': 'application/json'})
+
+    expected = []
+    last_since = datetime.datetime(2015, 1, 1).strftime(GH_DATE_FORMAT)
+    for offset in (0, 10, 20):
+        issue_group = _issues(n_issues=10, offset=offset)
+        _register_get(last_since, json.dumps(issue_group))
+        expected.extend(issue_group)
+        last_since = issue_group[-1]['updated_at']
+    _register_get(last_since, json.dumps([]))
+
+    actual = drafts_api.fetch_issues(since=expected[0]['updated_at'],
+        per_page=10)
+    assert expected == actual

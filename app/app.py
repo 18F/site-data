@@ -41,8 +41,8 @@ def requires_auth(f):
         if not auth or not check_auth(auth.username, auth.password):
             return authenticate()
         return f(*args, **kwargs)
-
     return decorated
+
 
 
 @app.context_processor
@@ -78,13 +78,3 @@ def manage():
     else:
         error = "No server to rebuild"
     return render_template("manage.html", error=error)
-
-
-@app.route("/_data/<filename>")
-def data(filename):
-    if os.path.isfile("_data/%s" % filename):
-        response = make_response(open("_data/%s" % filename).read(), 200)
-        response.headers['Content-Type'] = 'application/json'
-    else:
-        response = make_response("not found", 404)
-    return response

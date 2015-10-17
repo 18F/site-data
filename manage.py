@@ -3,21 +3,19 @@ from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 from app.app import app
 from lib.git_parse import GitHub
-from lib.fetch import Fetch
 from datetime import date
 from os import path, stat, environ
 from waitress import serve
 from config import config
-from app import db
+from app import db, models
 
 config_name = os.getenv('FLASK_CONFIG') or 'default'
+app.logger.info('Using FLASK_CONFIG {0} from environment'.format(config_name))
 app.config.from_object(config[config_name])
 db.init_app(app)
 migrate = Migrate(app, db)
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
-
-port = int(environ["VCAP_APP_PORT"])
 
 if environ['ENV'] == 'local':
     app.logger.debug('A value for debugging')
@@ -29,31 +27,18 @@ else:
 
 @manager.command
 def updatedata():
-    fetch    = Fetch('')
-    authors  = Authors()
-    drafts   = Drafts()
-    today = date.today().strftime("%Y-%m")
-    print("Fetching authors")
-    authors.fetch_all(today)
-    print("Fetching drafts")
-    drafts.fetch_all()
+    "Query GitHub and 18f.gsa.gov API to refresh database."
+    models.update_db_from_github()
 
-    if path.exists('_data/issues.json'):
-        issues = fetch.get_data_from_file("_data/issues.json")
-
-        # Fetch the milestone for each issue as json
-        for i in issues:
-            number = i['number']
-            milestones = "_data/issue-%s-milestones.json" % number
-            print("Fetching milestones for %s" % number)
-            drafts.fetch_milestone(number)
 
 @manager.command
 def deploy():
+    port = int(environ["VCAP_APP_PORT"])
     serve(app, port=port)
 
 @manager.command
-def clean_db():
+def cleandata():
+    "Deletes *all* stored data"
     for tbl in reversed(db.metadata.sorted_tables):
         db.engine.execute(tbl.delete())
 

@@ -2,8 +2,8 @@ import os, requests, yaml
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
 
-_GH_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
-_BEGINNING_OF_TIME = '1970-01-01T00:00:00Z'
+GH_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
+BEGINNING_OF_TIME = '1970-01-01T00:00:00Z'
 
 
 class GitHub():
@@ -50,6 +50,9 @@ class GitHub():
         else:
             return False
 
+    def git_url(self, endpoint):
+        return "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo, endpoint)
+
     def fetch_endpoint(self, endpoint, params={}):
         """Fetches any endpoint off of the repositories API.
         `self.owner` and `self.repo` are passed as parameters to `__init__`.
@@ -65,9 +68,7 @@ class GitHub():
         This will fetch all the data about 18F/18f.gsa.gov (see __init__)
         Example: gh.fetch_endpoint('issues?per_page=100')
         This will fetch the 100 most recent issues on gh.owner/gh.repo"""
-        git_url = "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo,
-                                         endpoint)
-        content = requests.get(git_url,
+        content = requests.get(self.git_url(endpoint),
                                params=params,
                                auth=HTTPBasicAuth(self.user, self.auth))
         if (content.ok):
@@ -82,9 +83,9 @@ class GitHub():
         else:
             return False
 
-    def fetch_issues(self, since=_BEGINNING_OF_TIME, **params):
+    def fetch_issues(self, since=BEGINNING_OF_TIME, **params):
         try:
-            params['since'] = since.strftime(_GH_DATE_FORMAT)
+            params['since'] = since.strftime(GH_DATE_FORMAT)
         except AttributeError:
             params['since'] = since  # did not need str conversion
         params['per_page'] = params.get('per_page', 100)
@@ -101,8 +102,8 @@ class GitHub():
             # check all results, alas
             params['since'] = _latest_update(new_issues)
             issues = self.fetch_endpoint('issues', params=params)
-            new_issues = [i for i in issues.json() if i['number'] not in result
-                          ]
+            new_issues = [i for i in issues.json()
+                          if i['number'] not in result]
         return result.values()
 
     def split_by_event(self, events, part):
@@ -151,6 +152,6 @@ drafts_api = GitHub('blog-drafts', '18F')
 
 def _latest_update(items, field_name='updated_at'):
     "Returns latest `field_name` in `items`"
-    updates = [datetime.strptime(i.get(field_name, _BEGINNING_OF_TIME),
-                                 _GH_DATE_FORMAT) for i in items]
-    return max(updates).strftime(_GH_DATE_FORMAT)
+    updates = [datetime.strptime(i.get(field_name, BEGINNING_OF_TIME),
+                                 GH_DATE_FORMAT) for i in items]
+    return max(updates).strftime(GH_DATE_FORMAT)

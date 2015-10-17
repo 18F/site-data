@@ -1,11 +1,11 @@
 import calendar
+import requests
 from functools import total_ordering
 from datetime import date, datetime
 import yaml
 from . import db
 from lib.utils import to_py_date
 from lib.git_parse import drafts_api, site_api
-from lib.fetch import Fetch
 
 author_months = db.Table(
     'author_months',
@@ -71,8 +71,7 @@ class Month(db.Model):
             db.session.add(month)
             if (not month.authors) or (not month.author_list_is_complete()):
                 for (username, author_data) in month.fetch_authors().items():
-                    # TODO: add an if, unless set collection_class
-                    month.authors.add(Author.from_gh_data(username,
+                    month.authors.add(Author.from_api_data(username,
                                                           author_data))
             month = month.next()
         db.session.commit()
@@ -100,8 +99,8 @@ class Author(db.Model):
     url = db.Column(db.String(), nullable=True)
 
     @classmethod
-    def from_gh_data(cls, username, dct):
-        "Finds and updates, or creates, instance based on ``from_gh_data``."
+    def from_api_data(cls, username, dct):
+        "Finds and updates, or creates, instance based on API result."
         author = cls.query.filter_by(username=username).first()
         if author:
             for field in ('first_name', 'last_name', 'full_name', 'url'):
@@ -113,10 +112,9 @@ class Author(db.Model):
     @classmethod
     def fetch(cls):
         Month.create_missing()
-        fetch = Fetch('https://18f.gsa.gov/api/data/authors.json')
-        authors_now = fetch.get_data_from_url()
-        for (username, author_data) in authors_now.items():
-            author = cls.from_gh_data(username, author_data)
+        response = requests.get('https://18f.gsa.gov/api/data/authors.json')
+        for (username, author_data) in response.json().items():
+            author = cls.from_api_data(username, author_data)
             db.session.add(author)
         GithubQueryLog.log('authors')
         db.session.commit()
@@ -238,7 +236,6 @@ class Issue(db.Model):
         issue = cls.query.filter_by(number=issue_data.get('number')).first()
         if issue:
             db.session.delete(issue)
-        # cls.query.filter_by(number=issue_data.get('number')).delete()
         db.session.commit()
         insertable = {
             'id': issue_data.get('id'),
