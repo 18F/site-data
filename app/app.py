@@ -127,11 +127,6 @@ def load_data():
 def index():
     return render_template("index.html")
 
-@app.route("/dashboard")
-@requires_auth
-def dashboard():
-    return render_template("dashboard.html")
-
 @app.route("/manage/")
 @requires_auth
 def manage():

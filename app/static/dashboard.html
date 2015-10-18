@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<head>
+	<script src="js/vendor/angular.min.js"></script>
+	<script src="js/dashboard.js"></script>
+	<link rel="stylesheet" href="css/google-fonts.css">
+	<link rel="stylesheet" href="css/normalize.min.css">
+	<link rel="stylesheet" href="css/style.scss.css">
+	<link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body ng-app="dashboard">
+	<header><center>18F Blog Dashboard</center></header>
+	<div ng-controller="dashboardCtrl">
+	<div class="usa-grid usa-grid-text">
+	 	<div class="usa-width-one-third">
+		 	<h1 class="big-number">{{pageviewsTotal30day}}</h1><h3>30 day pageviews</h3>
+			<table>
+				<tr><th>Path</th><th>Pageviews</th></tr>
+				<tr ng-repeat="row in pageviews30day">
+					<td>{{row[0]}}</td><td>{{row[1]}}</td>
+				</tr>
+			</table>
+		</div>
+		<div class="usa-width-one-third">
+			<h1 class="big-number">{{pageviewsTotal7day}}</h1><h3>7 day pageviews</h3>
+			<table>
+				<tr><th>Path</th><th>Pageviews</th></tr>
+				<tr ng-repeat="row in pageviews7day">
+					<td>{{row[0]}}</td><td>{{row[1]}}</td>
+				</tr>
+			</table>
+		</div>
+		<div class="usa-width-one-third">
+			<table>
+			 	<h1 class="big-number">{{pageviewsTotal1day}}</h1><h3>Pageviews since yesterday</h3>
+				<tr><th>Path</th><th>Pageviews</th></tr>
+				<tr ng-repeat="row in pageviews1day">
+					<td>{{row[0]}}</td><td>{{row[1]}}</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>
+
+<footer class="usa-footer usa-footer-slim usa-sans" role="contentinfo">
+    <div class="usa-grid usa-footer-return-to-top">
+      <a href="#">Return to top</a>
+    </div>
+    <div class="usa-footer-primary-section">
+      <div class="usa-grid-full">
+        <nav class="usa-footer-nav usa-width-two-thirds">
+          <ul class="usa-unstyled-list">
+            <li class="usa-width-one-fourth usa-footer-primary-content">
+              <a class="usa-footer-primary-link" href="#">Primary link</a>
+            </li>
+            <li class="usa-width-one-fourth usa-footer-primary-content">
+              <a class="usa-footer-primary-link" href="#">Primary link</a>
+            </li>
+            <li class="usa-width-one-fourth usa-footer-primary-content">
+              <a class="usa-footer-primary-link" href="#">Primary link</a>
+            </li>
+            <li class="usa-width-one-fourth usa-footer-primary-content">
+              <a class="usa-footer-primary-link" href="#">Primary link</a>
+            </li>
+          </ul>
+        </nav>
+        <div class="usa-width-one-sixth usa-footer-primary-content">
+          <p>(800) CALL-GOVT</p>
+        </div>
+        <div class="usa-width-one-sixth usa-footer-primary-content">
+          <a href="mailto:javascript:void(0)">info@agency.gov</a>
+        </div>          
+      </div>
+    </div>
+
+    <div class="usa-footer-secondary_section">
+      <div class="usa-grid">
+        <div class="usa-footer-logo">
+          <h3 class="usa-footer-slim-logo-heading">18F Outreach Team</h3>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
