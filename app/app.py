@@ -166,7 +166,7 @@ def data(filename):
     return response
 
 if __name__ == "__main__":
-    app.port=port
+    port = app.port
     if os.path.isdir("_data") is False:
         os.mkdir("_data")
     if os.environ['ENV'] == 'local':
