@@ -1,4 +1,4 @@
-from datetime import date, time, timedelta
+from datetime import date, timedelta
 from flask import Flask, request, render_template, make_response, Response
 from lib.git_parse import GitHub
 from lib.fetch import Fetch
@@ -84,7 +84,6 @@ def fetch_draft_milestone(i):
 
 @app.context_processor
 def load_date():
-    current = date.today().strftime("%B")
     curr_year = date.today().year
     curr_month = date.today().month
     prev = date(curr_year, curr_month, day=1) - timedelta(days=1)
