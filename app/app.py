@@ -15,7 +15,9 @@ app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
 
 drafts_api = GitHub('blog-drafts', '18F')
 site_api = GitHub('18f.gsa.gov', '18F')
-servers = {"production":os.environ['PROD'], "staging":os.environ['STAGING']}
+servers = {"production": os.environ['PROD'], "staging": os.environ['STAGING']}
+
+
 # htpasswd configuration c/o http://flask.pocoo.org/snippets/8/
 def check_auth(username, password):
     """This function is called to check if a username /
@@ -23,12 +25,14 @@ def check_auth(username, password):
     """
     return username == os.environ['HTUSER'] and password == os.environ['HTAUTH']
 
+
 def authenticate():
     """Sends a 401 response that enables basic auth"""
     return Response(
     'Could not verify your access level for that URL.\n'
     'You have to login with proper credentials', 401,
     {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
 
 def requires_auth(f):
     @wraps(f)
@@ -39,13 +43,14 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
+
 def fetch_authors(target):
     fetch = Fetch('https://18f.gsa.gov/api/data/authors.json')
-    year=date.today().year
+    year = date.today().year
     month_end = calendar.monthrange(year, int(target.split('-')[1].strip('0')))
     month_begin = "{0}-01".format(target)
     month_end = "{0}-{1}".format(target, month_end[1])
-    commit_range = {"since":month_begin, "until":month_end}
+    commit_range = {"since": month_begin, "until": month_end}
     commits = site_api.fetch_commits(commit_range)
 
     authors_then = yaml.load(site_api.file_at_commit(commits[0]['sha'], '_data/authors.yml'))
@@ -54,18 +59,21 @@ def fetch_authors(target):
     fetch.save_data(authors_then, '_data/{0}.json'.format(target))
     fetch.save_data(authors_now, '_data/current.json')
 
+
 def fetch_issues():
     gh = drafts_api
     fetch = Fetch('')
     issues = gh.fetch_issues()
     fetch.save_data(issues, '_data/issues.json')
 
+
 def fetch_issue_events(number, part=None, name=None):
     gh = drafts_api
     fetch = Fetch('')
     events = gh.fetch_issue_events(number, part)
     if events != []:
-        fetch.save_data(events, '_data/events-%s.json' % number )
+        fetch.save_data(events, '_data/events-%s.json' % number)
+
 
 def fetch_draft_milestone(i):
     gh = GitHub('blog-drafts', '18F')
@@ -73,16 +81,18 @@ def fetch_draft_milestone(i):
     milestones = gh.fetch_milestone(i)
     fetch.save_data(milestones, '_data/issue-%s-milestones.json' % i)
 
+
 @app.context_processor
 def load_date():
     current = date.today().strftime("%B")
     curr_year = date.today().year
     curr_month = date.today().month
     prev = date(curr_year, curr_month, day=1) - timedelta(days=1)
-    report = dict(string = prev.strftime("%B %Y"))
+    report = dict(string=prev.strftime("%B %Y"))
     report['formatted'] = prev.strftime("%Y-%m")
     report['date'] = prev
     return dict(date=report)
+
 
 @app.context_processor
 def load_data():
@@ -123,10 +133,12 @@ def load_data():
             data[f.split('.')[0]] = fetch.get_data_from_file('_data/%s' % f)
     return dict(data=data)
 
+
 @app.route("/")
 @requires_auth
 def index():
     return render_template("index.html")
+
 
 @app.route("/manage/")
 @requires_auth
@@ -141,6 +153,7 @@ def manage():
     else:
         error = "No server to rebuild"
     return render_template("manage.html", error=error)
+
 
 @app.route("/_data/<filename>")
 def data(filename):
