@@ -1,11 +1,14 @@
+import os
 from datetime import date, timedelta
 from flask import Flask, request, render_template, make_response, Response
 from lib.git_parse import GitHub
 from lib.fetch import Fetch
 from functools import wraps
 from waitress import serve
-import requests, json
-import yaml, os, calendar
+import calendar
+import json
+import requests
+import yaml
 from sassutils.wsgi import SassMiddleware
 
 app = Flask(__name__)
