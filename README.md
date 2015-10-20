@@ -24,6 +24,17 @@ You'll need to make your own local .env file and populate it with your GitHub us
 
     cp .env-example .env
 
+Unless you're using a tool like [autoenv](https://github.com/kennethreitz/autoenv), you'll need to `source .env`
+before running.
+
+Then create the `site-data-dev` database:
+
+    createdb site-data-dev
+
+and set it up
+
+    python manage.py db upgrade
+
 ## Running
 
 Run the server like so:
