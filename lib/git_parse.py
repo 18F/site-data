@@ -133,10 +133,6 @@ class GitHub():
         contents = self.fetch_raw(url)
         return (contents and contents.content) or ''
 
-    def get_repo_contents(self, path):
-        contents = self.fetch_endpoint('contents/%s' % path)
-        return contents.content
-
     def parse_by_key(self, data, key, match):
         i = 0
         matches = list()

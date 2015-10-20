@@ -12,9 +12,9 @@ def test_GitHub_fetch_raw(m):
     g = GitHub('18f.gsa.gov', '18F')
     request_string = "18F/18f.gsa.gov/staging/go"
     url = "https://raw.githubusercontent.com/%s" % request_string
-    m.get(url, content="Success!", status_code=200)
+    m.get(url, text="Success!", status_code=200)
     actual = g.fetch_raw(request_string)
-    assert actual.content == "Success!"
+    assert actual.text == "Success!"
 
 
 @requests_mock.mock()
@@ -33,11 +33,11 @@ def test_GitHub_fetch_endpoint_when_request_ok(m):
     endpoint = "issues"
     url = "%s/repos/%s/%s/%s" % (g.api, g.owner, g.repo, endpoint)
     m.get(url,
-          content="",
+          text="",
           status_code=200,
           headers={'Content-Type': 'text/html'})
     actual = g.fetch_endpoint(endpoint)
-    assert actual.content is ""
+    assert actual.text is u""
 
 
 @requests_mock.mock()
@@ -46,7 +46,7 @@ def test_GitHub_fetch_endpoint_when_request_not_ok(m):
     endpoint = "nonexistentendpoint"
     url = "%s/repos/%s/%s/%s" % (g.api, g.owner, g.repo, endpoint)
     m.get(url,
-          content="",
+          text="",
           status_code=404,
           headers={'Content-Type': 'text/html'})
     actual = g.fetch_endpoint(endpoint)
@@ -59,7 +59,7 @@ def test_GitHub_fetch_commits_request_not_ok(m):
     endpoint = "commits"
     url = "%s/repos/%s/%s/%s" % (g.api, g.owner, g.repo, endpoint)
     m.get(url,
-          content="",
+          json=[],
           status_code=404,
           headers={'Content-Type': 'text/html'})
     actual = g.fetch_commits()
@@ -71,7 +71,7 @@ def test_GitHub_fetch_commits_request_ok(m):
     g = GitHub('18f.gsa.gov', '18F')
     endpoint = "commits"
     url = "%s/repos/%s/%s/%s" % (g.api, g.owner, g.repo, endpoint)
-    m.get(url, content='[{"name": "18f.gsa.gov"}]', status_code=200)
+    m.get(url, json=[{"name": "18f.gsa.gov"}], status_code=200)
     actual = g.fetch_commits()
     assert actual == [{'name': '18f.gsa.gov'}]
 
@@ -82,11 +82,11 @@ def test_GitHub_fetch_issues(m):
     url = "%s/repos/%s/%s/issues?per_page=100" % (g.api, g.owner, g.repo)
     expected = [{"number": i} for i in range(100)]
     m.get(url,
-          content=json.dumps(expected),
+          json=expected,
           status_code=200,
           headers={'Content-Type': 'application/json'})
     actual = g.fetch_issues()
-    assert actual == expected
+    assert list(actual) == expected
 
 
 @requests_mock.mock()
@@ -109,19 +109,6 @@ def test_GitHub_split_by_event():
     assert actual == expected
 
 
-@requests_mock.mock()
-def test_GitHub_get_repo_contents(m):
-    g = GitHub('18f.gsa.gov', '18f')
-    url = 'https://api.github.com/repos/18f/18f.gsa.gov/contents/_posts'
-    expected = "[{'name': '18f.gsa.gov'}]"
-    m.get(url,
-          content=expected,
-          status_code=200,
-          headers={'Content-Type': 'application/json'})
-    actual = g.get_repo_contents('_posts')
-    assert expected == actual
-
-
 def test_GitHub_parse_by_key():
     g = GitHub('', '')
     expected = ['data-pull', 'data-push']
@@ -141,13 +128,13 @@ def _issues(start=datetime.datetime(2015, 1, 1), n_issues=100, offset=0):
 
 @requests_mock.mock()
 def test_GitHub_fetch_issues(m):
-    expected = json.dumps(_issues())
+    expected = _issues()
     m.get(drafts_api.git_url('issues'),
-          content=expected,
+          json=expected,
           status_code=200,
           headers={'Content-Type': 'application/json'})
     actual = drafts_api.fetch_issues()
-    assert json.loads(expected) == actual
+    assert expected == list(actual)
 
 
 @requests_mock.mock()
@@ -157,7 +144,7 @@ def test_GitHub_fetch_assembles_multiple_pages(m):
             drafts_api.git_url('issues'), since)
         app.logger.info('registering mock for {0}'.format(url))
         m.get(url,
-              content=content,
+              json=content,
               complete_qs=False,
               status_code=200,
               headers={'Content-Type': 'application/json'})
@@ -166,11 +153,11 @@ def test_GitHub_fetch_assembles_multiple_pages(m):
     last_since = datetime.datetime(2015, 1, 1).strftime(GH_DATE_FORMAT)
     for offset in (0, 10, 20):
         issue_group = _issues(n_issues=10, offset=offset)
-        _register_get(last_since, json.dumps(issue_group))
+        _register_get(last_since, issue_group)
         expected.extend(issue_group)
         last_since = issue_group[-1]['updated_at']
-    _register_get(last_since, json.dumps([]))
+    _register_get(last_since, [])
 
     actual = drafts_api.fetch_issues(since=expected[0]['updated_at'],
                                      per_page=10)
-    assert expected == actual
+    assert expected == list(actual)
