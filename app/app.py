@@ -10,7 +10,7 @@ from .models import GithubQueryLog, Author, Issue, Milestone, Month, Event, db
 from .models import update_db_from_github
 
 app = Flask(__name__)
-scss_manifest = {app.name: ('static/sass', 'static/css', 'static/css')}
+scss_manifest = {app.name: ('static/_scss', 'static/css')}
 # Middleware
 app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
 

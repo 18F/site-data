@@ -1,4 +1,5 @@
 *.pyc
+*.env
 _data/issue*.json
 static/css
 setenv.sh
