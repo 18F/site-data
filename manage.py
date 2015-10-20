@@ -25,6 +25,7 @@ if environ['ENV'] == 'local':
 else:
     app.debug = False
 
+
 @manager.command
 def updatedata(days=0):
     """Refresh stored data from upstream sources.
@@ -41,11 +42,13 @@ def deploy():
     port = int(environ["VCAP_APP_PORT"])
     serve(app, port=port)
 
+
 @manager.command
 def cleandata():
     "Deletes *all* stored data"
     for tbl in reversed(db.metadata.sorted_tables):
         db.engine.execute(tbl.delete())
+
 
 if __name__ == "__main__":
     manager.run()

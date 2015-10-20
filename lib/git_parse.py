@@ -51,7 +51,8 @@ class GitHub():
             return False
 
     def git_url(self, endpoint):
-        return "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo, endpoint)
+        return "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo,
+                                      endpoint)
 
     def fetch_endpoint(self, endpoint, params={}):
         """Fetches any endpoint off of the repositories API.
@@ -102,8 +103,8 @@ class GitHub():
             # check all results, alas
             params['since'] = _latest_update(new_issues)
             issues = self.fetch_endpoint('issues', params=params)
-            new_issues = [i for i in issues.json()
-                          if i['number'] not in result]
+            new_issues = [i for i in issues.json() if i['number'] not in result
+                          ]
         return result.values()
 
     def split_by_event(self, events, part):

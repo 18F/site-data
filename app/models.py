@@ -72,7 +72,7 @@ class Month(db.Model):
             if (not month.authors) or (not month.author_list_is_complete()):
                 for (username, author_data) in month.fetch_authors().items():
                     month.authors.add(Author.from_api_data(username,
-                                                          author_data))
+                                                           author_data))
             month = month.next()
         db.session.commit()
 
