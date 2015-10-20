@@ -275,6 +275,12 @@ class Issue(db.Model):
 
 
 def update_db_from_github(refresh_timedelta):
+    """Refresh author and issue data from Github / 18f API.
+
+    Args:
+        refresh_timedelta: Pull from each data source only if the last pull
+            was at least this long ago.
+    """
     last_query = GithubQueryLog.last_query_datetime('authors')
     if (datetime.now() - last_query) > refresh_timedelta:
         Author.fetch()

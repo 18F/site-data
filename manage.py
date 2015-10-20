@@ -3,7 +3,7 @@ from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 from app.app import app
 from lib.git_parse import GitHub
-from datetime import date
+from datetime import date, timedelta
 from os import path, stat, environ
 from waitress import serve
 from config import config
@@ -26,9 +26,14 @@ else:
     app.debug = False
 
 @manager.command
-def updatedata():
-    "Query GitHub and 18f.gsa.gov API to refresh database."
-    models.update_db_from_github()
+def updatedata(days=0):
+    """Refresh stored data from upstream sources.
+
+    Args:
+        days: Pull from each data source only if the last pull was at least
+            this many days ago (default 0)
+    """
+    models.update_db_from_github(timedelta(days=days))
 
 
 @manager.command
