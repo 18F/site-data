@@ -9,7 +9,7 @@ import yaml, os, calendar
 from sassutils.wsgi import SassMiddleware
 
 app = Flask(__name__)
-scss_manifest = {app.name: ('static/sass', 'static/css', 'static/css')}
+scss_manifest = {app.name: ('static/_scss', 'static/css')}
 # Middleware
 app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
 

@@ -924,8 +924,12 @@ select {
   -moz-appearance: none;
   -webkit-appearance: none;
   appearance: none;
-  background: url("../img/arrow-down.png") no-repeat;
-  background-position: right 1.3rem center; }
+  background-color: #ffffff;
+  background-image: url("../img/arrow-down.png");
+  background-image: url("../img/arrow-down.svg");
+  background-position: right 1.3rem center;
+  background-repeat: no-repeat;
+  background-size: 1.3rem; }
 
 legend {
   font-size: 3rem;
@@ -1631,7 +1635,7 @@ table {
   margin: 2em 0;
   min-width: 100%; }
   table thead tr {
-    background-color: #efefef; }
+    background-color: #f1f1f1; }
   table thead th {
     text-align: left; }
   table th, table td {
@@ -1700,7 +1704,7 @@ a.usa-label, a.usa-label-big {
     top: 0; }
 
 .usa-disclaimer {
-  background-color: #d6d7d9;
+  background-color: #f1f1f1;
   font-size: 1.3rem;
   padding-bottom: .5rem;
   padding-top: .5rem; }
@@ -1746,7 +1750,7 @@ a.usa-label, a.usa-label-big {
     padding-right: 1rem;
     padding-top: 1rem; }
     .usa-sidenav-list a:hover {
-      background-color: #efefef;
+      background-color: #f1f1f1;
       color: #0071bc;
       text-decoration: none; }
     .usa-sidenav-list a.usa-current {
@@ -1794,7 +1798,7 @@ a.usa-label, a.usa-label-big {
   padding-top: 2rem; }
 
 .usa-footer-primary-section {
-  background-color: #efefef; }
+  background-color: #f1f1f1; }
   .usa-footer-primary-section .usa-footer-primary-content {
     padding-left: 2.5rem;
     padding-right: 2.5rem; }
@@ -1847,11 +1851,11 @@ a.usa-label, a.usa-label-big {
 ul.usa-footer-primary-content,
 li.usa-footer-primary-content,
 li.usa-footer-primary-content {
-  border-top: 1px solid #000; }
+  border-top: 1px solid #212121; }
   ul.usa-footer-primary-content:last-child,
   li.usa-footer-primary-content:last-child,
   li.usa-footer-primary-content:last-child {
-    border-bottom: 1px solid #000; }
+    border-bottom: 1px solid #212121; }
     @media screen and (min-width: 600px) {
       ul.usa-footer-primary-content:last-child,
       li.usa-footer-primary-content:last-child,
@@ -1881,9 +1885,11 @@ li.usa-footer-primary-content {
       padding: 0; } }
 
 .usa-footer-secondary_section {
-  background-color: #e0e0e0;
+  background-color: #d6d7d9;
   padding-top: 3rem;
   padding-bottom: 3rem; }
+  .usa-footer-secondary_section a {
+    color: #212121; }
 
 @media screen and (min-width: 600px) {
   .usa-footer-big-secondary-section {
@@ -1900,7 +1906,7 @@ li.usa-footer-primary-content {
 .usa-footer-big ul {
   padding-bottom: 2.5rem; }
   .usa-footer-big ul:last-child {
-    border-bottom: 1px solid #000; }
+    border-bottom: 1px solid #212121; }
     @media screen and (min-width: 600px) {
       .usa-footer-big ul:last-child {
         border-bottom: none; } }
@@ -1910,8 +1916,11 @@ li.usa-footer-primary-content {
     .usa-footer-big ul {
       padding-bottom: 0; } }
   .usa-footer-big ul .usa-footer-primary-link {
-    background: url("../img/arrow-down.png") no-repeat;
-    background-position: 1.5rem;
+    background-image: url("../img/arrow-down.png");
+    background-image: url("../img/arrow-down.svg");
+    background-position: 1.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.3rem;
     padding-left: 3.5rem; }
     @media screen and (min-width: 600px) {
       .usa-footer-big ul .usa-footer-primary-link {
@@ -1921,10 +1930,10 @@ li.usa-footer-primary-content {
   .usa-footer-big ul.hidden {
     padding-bottom: 0; }
     .usa-footer-big ul.hidden .usa-footer-primary-link {
-      margin: 0;
-      background: url("../img/arrow-right.png") no-repeat;
-      background-position: 1.5rem;
-      cursor: pointer; }
+      background-image: url("../img/arrow-right.png");
+      background-image: url("../img/arrow-right.svg");
+      cursor: pointer;
+      margin: 0; }
       @media screen and (min-width: 600px) {
         .usa-footer-big ul.hidden .usa-footer-primary-link {
           background: none;
@@ -2227,7 +2236,7 @@ fieldset {
   width: 100%; }
   .usa-accordion > ul > li,
   .usa-accordion-bordered > ul > li {
-    background-color: #efefef;
+    background-color: #f1f1f1;
     font-family: "Source Sans Pro", "Helvetica", "Arial", sans-serif;
     list-style: none;
     margin-bottom: 6px;
@@ -2240,7 +2249,7 @@ fieldset {
   background-size: 1.3rem; }
 .usa-accordion button,
 .usa-accordion-bordered button {
-  background-color: #efefef;
+  background-color: #f1f1f1;
   background-image: url("../img/minus.png");
   background-image: url("../img/minus.svg");
   background-position: right 3rem center;
@@ -2273,9 +2282,9 @@ fieldset {
     margin: 0; }
 
 .usa-accordion-bordered .usa-accordion-content {
-  border-bottom: 3px solid #efefef;
-  border-left: 3px solid #efefef;
-  border-right: 3px solid #efefef; }
+  border-bottom: 3px solid #f1f1f1;
+  border-left: 3px solid #f1f1f1;
+  border-right: 3px solid #f1f1f1; }
 
 .usa-accordion-content {
   display: block;
