@@ -1,10 +1,13 @@
-from datetime import date
+import os
+from datetime import date, timedelta
 from flask import Flask, request, render_template, make_response, Response
 from lib.git_parse import GitHub
 from functools import wraps
 from waitress import serve
-import requests, json
-import yaml, os
+import calendar
+import json
+import requests
+import yaml
 from sassutils.wsgi import SassMiddleware
 from .models import GithubQueryLog, Author, Issue, Milestone, Month, Event, db
 from .models import update_db_from_github
@@ -26,13 +29,12 @@ def check_auth(username, password):
         'HTAUTH']
 
 
+
 def authenticate():
     """Sends a 401 response that enables basic auth"""
-    return Response(
-        'Could not verify your access level for that URL.\n'
-        'You have to login with proper credentials', 401,
-        {'WWW-Authenticate': 'Basic realm="Login Required"'})
-
+    return Response('Could not verify your access level for that URL.\n'
+                    'You have to login with proper credentials', 401,
+                    {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 def requires_auth(f):
     @wraps(f)
