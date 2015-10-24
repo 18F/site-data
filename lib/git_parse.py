@@ -1,4 +1,5 @@
 import os, requests, yaml
+import yaml
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
 
@@ -30,9 +31,9 @@ class GitHub():
 
     def fetch_raw(self, request_string):
         """Gets the raw contents of a file from a raw.githubusercontent URL
+        allowing you to fetch a file from a specific HEAD or SHA.
 
         Appends https://raw.githubusercontent.com/ to a passed URL string
-        allowing you to fetch a file from a specific HEAD or SHA.
 
         Example:
         >>> gh = GitHub("", "")
@@ -49,6 +50,21 @@ class GitHub():
             return content
         else:
             return False
+
+    def raw_file(self, path):
+        "Gets raw file content (at MASTER) from github, given file path."
+        request_string = '{owner}/{repo}/master/{path}'.format(path=path,
+                                                               ** self.__dict__)
+        return self.fetch_raw(request_string)
+
+    def yaml(self, path):
+        "Returns front matter and content from Jekyll/YAML file"
+        raw = self.raw_file(path)
+        if raw:
+            (front_matter, content) = raw.text.split('---', 1)
+            return (yaml.load(front_matter), yaml.load(content))
+        else:
+            return ({}, {})
 
     def git_url(self, endpoint):
         return "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo,
@@ -145,6 +161,7 @@ class GitHub():
 
 site_api = GitHub('18f.gsa.gov', '18F')
 drafts_api = GitHub('blog-drafts', '18F')
+hub_api = GitHub('hub', '18F')
 
 
 def _latest_update(items, field_name='updated_at'):

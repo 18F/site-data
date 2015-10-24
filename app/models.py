@@ -5,7 +5,7 @@ from datetime import date, datetime
 import yaml
 from . import db
 from lib.utils import to_py_date
-from lib.git_parse import drafts_api, site_api
+from lib.git_parse import drafts_api, site_api, hub_api
 
 author_months = db.Table(
     'author_months',
@@ -90,13 +90,45 @@ class Month(db.Model):
         return {"since": month_begin, "until": month_end}
 
 
+class DutyStation(db.Model):
+    airport_code = db.Column(db.Text, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    timezone = db.Column(db.Text, nullable=False)
+    authors = db.relationship('Author', collection_class=set)
+
+    @classmethod
+    def fill(cls):
+        (front_matter, data) = hub_api.yaml('_data/locations.yml')
+        for d in data:
+            if not cls.query.get(d['code']):
+                d['airport_code'] = d.pop('code')
+                d['name'] = d.pop('label')
+                db.session.add(cls(**d))
+        db.session.commit()
+
+
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String())
+    username = db.Column(db.String())  # in github
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
     full_name = db.Column(db.String())
     url = db.Column(db.String(), nullable=True)
+    pronouns = db.Column(db.String(), nullable=True)
+    duty_station = db.Column(db.String(),
+                             db.ForeignKey('duty_station.airport_code'))
+
+    def __init__(self, *arg, **kwarg):
+        super(Author, self).__init__(*arg, **kwarg)
+        self.lookup_duty_station()
+
+    def lookup_duty_station(self):
+        (front_matter,
+         data) = hub_api.yaml('_data/team/{0}.yml'.format(self.username))
+        self.duty_station = data.get('location')
+        # null duty station == absent from 18F hub == probably not 18F
 
     @classmethod
     def from_api_data(cls, username, dct):
@@ -281,6 +313,7 @@ def update_db_from_github(refresh_timedelta):
         refresh_timedelta: Pull from each data source only if the last pull
             was at least this long ago.
     """
+    DutyStation.fill()
     last_query = GithubQueryLog.last_query_datetime('authors')
     if (datetime.now() - last_query) > refresh_timedelta:
         Author.fetch()
