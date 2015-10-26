@@ -8,22 +8,24 @@ BEGINNING_OF_TIME = '1970-01-01T00:00:00Z'
 
 
 class GitHub():
-    def __init__(self, repo, owner):
+    def __init__(self, repo, owner, branch='master'):
         """Sets up the class
         ## Parameters:
         *   repo, str, the repo we want to work with (usually necessary for all
             but a reqired parameter for now).
         *   owner, str, the owner of repo this usually is necessary
+        *   branch, str, branch of the repo to target
 
-        >>> gh = GitHub('18f.gsa.gov', '18F')
+        >>> gh = GitHub('18f.gsa.gov', '18F', 'staging')
 
         This will set up an instance of this class with repo and owner set to
-        18F and targeting the '18f.gsa.gov' repo.
+        18F and targeting the 'staging' branch of the '18f.gsa.gov' repo.
 
         Once you have `gh` set you can call methods like `gh.fetch_endpoint()`
         Examples thorughout this documentation will use `gh` this way."""
         self.repo = repo.strip()
         self.owner = owner.strip()
+        self.branch = branch
         self.api = "https://api.github.com"
         self.raw = "https://raw.githubusercontent.com"
         self.user = os.environ['GITHUB_USER']
@@ -51,20 +53,23 @@ class GitHub():
         else:
             return False
 
-    def raw_file(self, path):
-        "Gets raw file content (at MASTER) from github, given file path."
-        request_string = '{owner}/{repo}/master/{path}'.format(path=path,
+    def raw_file(self, path, branch='staging'):
+        "Gets raw file content (at STAGING) from github, given file path."
+        request_string = '{owner}/{repo}/{branch}/{path}'.format(path=path,
                                                                ** self.__dict__)
         return self.fetch_raw(request_string)
 
-    def yaml(self, path):
-        "Returns front matter and content from Jekyll/YAML file"
+    def yaml(self, path, segment_number):
+        """Returns data from Jekyll/YAML file.
+
+        Splits the file content on ---, then YAML-parses and returns the
+        `segment_number`th element from the split."""
         raw = self.raw_file(path)
         if raw:
-            (front_matter, content) = raw.text.split('---', 1)
-            return (yaml.load(front_matter), yaml.load(content))
+            segments = raw.text.split('---')
+            return yaml.load(segments[segment_number])
         else:
-            return ({}, {})
+            return {}
 
     def git_url(self, endpoint):
         return "%s/repos/%s/%s/%s" % (self.api, self.owner, self.repo,
@@ -159,9 +164,9 @@ class GitHub():
         return matches
 
 
-site_api = GitHub('18f.gsa.gov', '18F')
-drafts_api = GitHub('blog-drafts', '18F')
-hub_api = GitHub('hub', '18F')
+site_api = GitHub('18f.gsa.gov', '18F', branch='staging')
+drafts_api = GitHub('blog-drafts', '18F', branch='staging')
+hub_api = GitHub('hub', '18F', branch='master')
 
 
 def _latest_update(items, field_name='updated_at'):

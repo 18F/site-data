@@ -90,17 +90,23 @@ class Month(db.Model):
         return {"since": month_begin, "until": month_end}
 
 
+class Team(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    authors = db.relationship('Author', cascade='all, delete-orphan', backref='team')
+
+
 class DutyStation(db.Model):
     airport_code = db.Column(db.Text, primary_key=True)
     name = db.Column(db.Text, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     timezone = db.Column(db.Text, nullable=False)
-    authors = db.relationship('Author', collection_class=set)
+    authors = db.relationship('Author', collection_class=set, backref='duty_station')
 
     @classmethod
     def fill(cls):
-        (front_matter, data) = hub_api.yaml('_data/locations.yml')
+        data = hub_api.yaml('_data/locations.yml', 1)
         for d in data:
             if not cls.query.get(d['code']):
                 d['airport_code'] = d.pop('code')
@@ -117,18 +123,30 @@ class Author(db.Model):
     full_name = db.Column(db.String())
     url = db.Column(db.String(), nullable=True)
     pronouns = db.Column(db.String(), nullable=True)
-    duty_station = db.Column(db.String(),
+    airport_code = db.Column(db.String(),
                              db.ForeignKey('duty_station.airport_code'))
+    team_id = db.Column(db.Integer(), db.ForeignKey('team.id'))
 
     def __init__(self, *arg, **kwarg):
         super(Author, self).__init__(*arg, **kwarg)
         self.lookup_duty_station()
+        self.lookup_team()
 
     def lookup_duty_station(self):
-        (front_matter,
-         data) = hub_api.yaml('_data/team/{0}.yml'.format(self.username))
-        self.duty_station = data.get('location')
+        #import ipdb; ipdb.set_trace()
+        data = hub_api.yaml('_data/team/{0}.yml'.format(self.username), 1)
+        self.airport_code = data.get('location')
         # null duty station == absent from 18F hub == probably not 18F
+
+    def lookup_team(self):
+
+        data = site_api.yaml('_team/{0}.md'.format(self.username), 1)
+        # or site_api?` `
+        team_name = data.get('team')
+        if team_name:
+            team = Team.query.filter_by(name=team_name).first() or Team(name=team_name)
+            db.session.add(team)
+            self.team = team
 
     @classmethod
     def from_api_data(cls, username, dct):
