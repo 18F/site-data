@@ -133,15 +133,13 @@ class Author(db.Model):
         self.lookup_team()
 
     def lookup_duty_station(self):
-        #import ipdb; ipdb.set_trace()
+        "Query Hub for an author's airport code"
         data = hub_api.yaml('_data/team/{0}.yml'.format(self.username), 1)
         self.airport_code = data.get('location')
-        # null duty station == absent from 18F hub == probably not 18F
 
     def lookup_team(self):
-
+        "Query 18F website for an author's team in 18F"
         data = site_api.yaml('_team/{0}.md'.format(self.username), 1)
-        # or site_api?` `
         team_name = data.get('team')
         if team_name:
             team = Team.query.filter_by(name=team_name).first() or Team(name=team_name)
@@ -161,6 +159,7 @@ class Author(db.Model):
 
     @classmethod
     def fetch(cls):
+        "Query 18F website API, creating Author instances for each blog author"
         Month.create_missing()
         response = requests.get('https://18f.gsa.gov/api/data/authors.json')
         for (username, author_data) in response.json().items():
