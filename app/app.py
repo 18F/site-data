@@ -17,7 +17,7 @@ scss_manifest = {app.name: ('static/_scss', 'static/css')}
 # Middleware
 app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
 
-servers = {"production": os.environ['PROD'], "staging": os.environ['STAGING']}
+servers = {"production": os.environ.get('PROD'), "staging": os.environ.get('STAGING')}
 
 
 # htpasswd configuration c/o http://flask.pocoo.org/snippets/8/
