@@ -7,10 +7,15 @@ cache: pip
 python:
   - "2.7"
 
+addons:
+  postgresql: "9.4"
+
 before_script:
+  - psql -c 'create database "site-data-test";' -U postgres
   - pip install -r requirements.txt
+  - python manage.py db upgrade
 
 script: nosetests -s
 
 env:
-- GITHUB_USER=test_user GITHUB_AUTH=sample_key
+- GITHUB_USER=test_user GITHUB_AUTH=sample_key VCAP_APP_PORT=8080 ENV=local HTUSER=18f HTAUTH=4usa FLASK_CONFIG=testing PROD=localhost STAGING=localhost
