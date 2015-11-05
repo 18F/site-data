@@ -81,7 +81,6 @@ def manage():
         branch = servers[server][1]
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         payload = {"ref": "refs/heads/%s" % branch}
-        import pdb; pdb.set_trace();
         requests.post(url, data=json.dumps(payload), headers=headers)
     else:
         error = "No server to rebuild"
