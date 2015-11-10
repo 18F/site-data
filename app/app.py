@@ -11,6 +11,7 @@ import yaml
 from sassutils.wsgi import SassMiddleware
 from .models import GithubQueryLog, Author, Issue, Milestone, Month, Event, db
 from .models import update_db_from_github
+from .charts import n_authors, n_authors_by_location
 
 app = Flask(__name__)
 scss_manifest = {app.name: ('static/_scss', 'static/css')}
@@ -58,6 +59,7 @@ def load_data():
     }
     for i in Issue.query:
         data['issue-{0}-milestones'.format(i.number)] = i.milestones
+    data['charts'] = [n_authors(), n_authors_by_location()]
     return dict(data=data)
 
 

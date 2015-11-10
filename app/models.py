@@ -26,6 +26,18 @@ class Month(db.Model):
         return '{0}-{1}'.format(self.begin.year, self.begin.month)
 
     @classmethod
+    def non_empty(cls):
+        return cls.query.filter(cls.authors)
+
+    @classmethod
+    def author_count_by_location(cls, location):
+        return [(str(m),
+                 len([a
+                      for a in m.authors
+                      if a.duty_station and a.duty_station.group == location]))
+                for m in cls.non_empty()]
+
+    @classmethod
     def get_or_create(cls, first_day):
         return cls.query.get(first_day) or cls(begin=first_day)
 
@@ -93,7 +105,9 @@ class Month(db.Model):
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
-    authors = db.relationship('Author', cascade='all, delete-orphan', backref='team')
+    authors = db.relationship('Author',
+                              cascade='all, delete-orphan',
+                              backref='team')
 
 
 class DutyStation(db.Model):
@@ -102,7 +116,9 @@ class DutyStation(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     timezone = db.Column(db.Text, nullable=False)
-    authors = db.relationship('Author', collection_class=set, backref='duty_station')
+    authors = db.relationship('Author',
+                              collection_class=set,
+                              backref='duty_station')
 
     @classmethod
     def fill(cls):
@@ -113,6 +129,15 @@ class DutyStation(db.Model):
                 d['name'] = d.pop('label')
                 db.session.add(cls(**d))
         db.session.commit()
+
+    def __str__(self):
+        return self.airport_code
+
+    _groups = {'DCA': 'DC', 'SFO': 'SF'}
+
+    @property
+    def group(self):
+        return self._groups.get(self.airport_code, 'OTHER')
 
 
 class Author(db.Model):
@@ -142,7 +167,8 @@ class Author(db.Model):
         data = site_api.yaml('_team/{0}.md'.format(self.username), 1)
         team_name = data.get('team')
         if team_name:
-            team = Team.query.filter_by(name=team_name).first() or Team(name=team_name)
+            team = Team.query.filter_by(name=team_name).first() or Team(
+                name=team_name)
             db.session.add(team)
             self.team = team
 
@@ -223,13 +249,12 @@ class Event(db.Model):
     @classmethod
     def from_gh_data(cls, event_data):
         "Given dict of event data fetched from GitHub API, return instance"
-        return cls(
-            id=event_data['id'],
-            commit_id=event_data['commit_id'],
-            url=event_data['url'],
-            actor=event_data['actor']['login'],
-            event=event_data['event'],
-            created_at=to_py_date(event_data.get('created_at')), )
+        return cls(id=event_data['id'],
+                   commit_id=event_data['commit_id'],
+                   url=event_data['url'],
+                   actor=event_data['actor']['login'],
+                   event=event_data['event'],
+                   created_at=to_py_date(event_data.get('created_at')), )
 
 
 class Milestone(db.Model):
@@ -243,12 +268,11 @@ class Milestone(db.Model):
     @classmethod
     def from_gh_data(cls, milestone_data):
         "Given dict of milestone data fetched from GitHub API, return instance"
-        return cls(
-            id=milestone_data['id'],
-            title=milestone_data['milestone']['title'],
-            commit_id=milestone_data.get('commit_id'),
-            created_at=to_py_date(milestone_data.get('created_at')),
-            url=milestone_data.get('url'), )
+        return cls(id=milestone_data['id'],
+                   title=milestone_data['milestone']['title'],
+                   commit_id=milestone_data.get('commit_id'),
+                   created_at=to_py_date(milestone_data.get('created_at')),
+                   url=milestone_data.get('url'), )
 
 
 class Issue(db.Model):

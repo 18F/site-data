@@ -14,6 +14,11 @@
     <li><a href="#all-posts">All other posts</a></li>
   </ul>
 </nav>
+<section class="charts">
+  {% for chart in data['charts'] %}
+    {{ chart.render()|safe }}
+  {% endfor %}
+</section>
 <section class="usa-width-three-quarters">
   <h2 id="authors usa-heading">Total authors</h2>
     <p>There are currently {{ data['current'] | length }} authors.</p>
