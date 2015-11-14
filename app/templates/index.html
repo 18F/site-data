@@ -19,9 +19,54 @@
     {{ chart.render()|safe }}
   {% endfor %}
 </section>
+<section>
+  <h2>Posts authored per team member, by team</h2>
+  <table name="Authorship by team">
+    <tr>
+      <thead>
+      {% for header in data['authorship_by_team'][0].keys() %}
+        <th>{{ header[2:]|replace('_',' ') }}</th>
+      {% endfor %}
+      </thead>
+      <tbody>
+      {% for row in data['authorship_by_team'] %}
+        <tr>
+          <td>{{ row[0] }}</td>
+          {% for cell in row[1:] %}
+          <td>{{ (cell and cell|join(', '))or '' }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </tr>
+  </table>
+
+  <h2>Posts authored per team member, by location</h2>
+  <table name="Authorship by location">
+    <tr>
+      <thead>
+      {% for header in data['authorship_by_loc'][0].keys() %}
+        <th>{{ header[2:]|replace('_',' ') }}</th>
+      {% endfor %}
+      </thead>
+      <tbody>
+      {% for row in data['authorship_by_loc'] %}
+        <tr>
+          <td>{{ row[0] }}</td>
+          {% for cell in row[1:] %}
+          <td>{{ (cell and cell|join(', '))or '' }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </tr>
+  </table>
+
+</section>
 <section class="usa-width-three-quarters">
   <h2 id="authors usa-heading">Total authors</h2>
-    <p>There are currently {{ data['current'] | length }} authors.</p>
+    <p>Currently {{ data['current'] | length }}
+       of 18F's {{ data['headcount'] }} have published.</p>
     <p>The number of authors in previous months has been:</p>
     <ul>{% for m in data.months |sort|reverse %}
       <li>{{ m }}: {{ m.authors | length}}</li>

@@ -1,13 +1,15 @@
 import os
-from flask.ext.script import Manager
-from flask.ext.migrate import Migrate, MigrateCommand
-from app.app import app
-from lib.git_parse import GitHub
 from datetime import date, timedelta
-from os import path, stat, environ
+from os import environ, path, stat
+
+from flask.ext.migrate import Migrate, MigrateCommand
+from flask.ext.script import Manager
 from waitress import serve
-from config import config
+
 from app import db, models
+from app.app import app
+from config import config
+from lib.git_parse import GitHub
 
 config_name = os.getenv('FLASK_CONFIG') or 'default'
 app.logger.info('Using FLASK_CONFIG {0} from environment'.format(config_name))

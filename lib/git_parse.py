@@ -1,10 +1,81 @@
-import os, requests, yaml
+import functools
+import os
+import re
+from datetime import datetime
+
+import requests
 import yaml
 from requests.auth import HTTPBasicAuth
-from datetime import datetime
+
+from lib.utils import permissive_yaml_load
 
 GH_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 BEGINNING_OF_TIME = '1970-01-01T00:00:00Z'
+
+
+class GitHubRepo(object):
+    auth = HTTPBasicAuth(os.environ['GITHUB_USER'], os.environ['GITHUB_AUTH'])
+    owner = '18F'
+
+    def __init__(self, repo_name):
+        self.name = repo_name
+        self.url = 'https://api.github.com/repos/{owner}/{name}/contents/'.format(
+            owner=self.owner,
+            name=self.name)
+
+    def get(self, path):
+        url = self.url + path
+        return requests.get(url, auth=self.auth)
+
+
+class Private18FDataRepo(GitHubRepo):
+    def __init__(self):
+        super(Private18FDataRepo, self).__init__('data-private')
+
+    def team_members(self):
+        for itm in self.get('team').json():
+            if itm['html_url'].endswith('.yml'):
+                response = requests.get(itm['download_url'], auth=self.auth)
+                member = permissive_yaml_load(response.text)
+                # un-nest private fields into top level
+                member.update(member.pop('private', {}))
+                yield member
+
+
+class SiteRepo(GitHubRepo):
+
+    date_from_title = re.compile(r'^\d\d\d\d\-\d{1,2}\-\d{1,2}\-')
+
+    def __init__(self):
+        super(SiteRepo, self).__init__('18f.gsa.gov')
+
+    def urls(self):
+        for post_data in self.get('_posts').json():
+            try:
+                post_date = self.date_from_title.search(post_data[
+                    'name']).group(0)
+                post_date = datetime.strptime(post_date, '%Y-%m-%d-').date()
+                yield (post_data.get('url'), post_data.get('download_url'),
+                       post_date)
+            except AttributeError:
+                pass  # not a properly named post, skip
+
+    def frontmatter(self, download_url):
+        resp = requests.get(download_url)
+        if resp.ok:
+            frontmatter = yaml.load(resp.text.split('---')[1])
+            return frontmatter
+
+
+private_18f_data_repo = Private18FDataRepo()
+site_repo = SiteRepo()
+
+
+def get(url, params={}):
+    return requests.get(url,
+                        params,
+                        auth=HTTPBasicAuth(os.environ['GITHUB_USER'],
+                                           os.environ['GITHUB_AUTH']))
 
 
 class GitHub():
@@ -55,8 +126,9 @@ class GitHub():
 
     def raw_file(self, path, branch='staging'):
         "Gets raw file content (at STAGING) from github, given file path."
-        request_string = '{owner}/{repo}/{branch}/{path}'.format(path=path,
-                                                               ** self.__dict__)
+        request_string = '{owner}/{repo}/{branch}/{path}'.format(
+            path=path,
+            **self.__dict__)
         return self.fetch_raw(request_string)
 
     def yaml(self, path, segment_number):
@@ -67,7 +139,7 @@ class GitHub():
         raw = self.raw_file(path)
         if raw:
             segments = raw.text.split('---')
-            return yaml.load(segments[segment_number])
+            return yaml.load(segments[segment_number].replace('\t', ' '))
         else:
             return {}
 
@@ -90,9 +162,10 @@ class GitHub():
         This will fetch all the data about 18F/18f.gsa.gov (see __init__)
         Example: gh.fetch_endpoint('issues?per_page=100')
         This will fetch the 100 most recent issues on gh.owner/gh.repo"""
-        content = requests.get(self.git_url(endpoint),
-                               params=params,
-                               auth=HTTPBasicAuth(self.user, self.auth))
+        content = requests.get(
+            self.git_url(endpoint),
+            params=params,
+            auth=HTTPBasicAuth(self.user, self.auth))
         if (content.ok):
             return content
         else:
@@ -124,8 +197,8 @@ class GitHub():
             # check all results, alas
             params['since'] = _latest_update(new_issues)
             issues = self.fetch_endpoint('issues', params=params)
-            new_issues = [i for i in issues.json() if i['number'] not in result
-                          ]
+            new_issues = [i for i in issues.json()
+                          if i['number'] not in result]
         return result.values()
 
     def split_by_event(self, events, part):
@@ -149,11 +222,6 @@ class GitHub():
     def fetch_milestone(self, issue):
         return self.fetch_issue_events(issue, 'milestoned')
 
-    def file_at_commit(self, sha, filename):
-        url = "%s/%s/%s/%s" % (self.owner, self.repo, sha, filename)
-        contents = self.fetch_raw(url)
-        return (contents and contents.content) or ''
-
     def parse_by_key(self, data, key, match):
         i = 0
         matches = list()
@@ -171,6 +239,6 @@ hub_api = GitHub('hub', '18F', branch='master')
 
 def _latest_update(items, field_name='updated_at'):
     "Returns latest `field_name` in `items`"
-    updates = [datetime.strptime(i.get(field_name, BEGINNING_OF_TIME),
-                                 GH_DATE_FORMAT) for i in items]
+    updates = [datetime.strptime(
+        i.get(field_name, BEGINNING_OF_TIME), GH_DATE_FORMAT) for i in items]
     return max(updates).strftime(GH_DATE_FORMAT)
