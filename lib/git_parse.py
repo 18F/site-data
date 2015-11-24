@@ -1,5 +1,6 @@
 import functools
 import os
+import pprint
 import re
 from datetime import datetime
 
@@ -41,6 +42,17 @@ class Private18FDataRepo(GitHubRepo):
                 member.update(member.pop('private', {}))
                 yield member
 
+    def _available_data_sample(self):
+        for itm in self.get('team').json():
+            if itm['html_url'].endswith('yml'):
+                print("\nPrivate18FDataRepo.team\n---------------")
+                pprint.pprint(itm)
+                print(itm['download_url'] + "\n---------------")
+                response = requests.get(itm['download_url'], auth=self.auth)
+                member = permissive_yaml_load(response.text)
+                pprint.pprint(member)
+                return  # we only want one record in our sample
+
 
 class SiteRepo(GitHubRepo):
 
@@ -66,16 +78,18 @@ class SiteRepo(GitHubRepo):
             frontmatter = yaml.load(resp.text.split('---')[1])
             return frontmatter
 
+    def _available_data_sample(self):
+        for itm in self.get('team').json():
+            post_data = self.get('_posts').json()[0]
+            print("18f.gsa.gov\n---------------")
+            pprint.pprint(post_data)
+            print("18f.gsa.gov post front matter\n---------------")
+            pprint.pprint(self.frontmatter(post_data['download_url']))
+            return  # sample only one
+
 
 private_18f_data_repo = Private18FDataRepo()
 site_repo = SiteRepo()
-
-
-def get(url, params={}):
-    return requests.get(url,
-                        params,
-                        auth=HTTPBasicAuth(os.environ['GITHUB_USER'],
-                                           os.environ['GITHUB_AUTH']))
 
 
 class GitHub():
@@ -186,6 +200,7 @@ class GitHub():
         params['per_page'] = params.get('per_page', 100)
         params['sort'] = 'updated'
         params['direction'] = 'asc'
+        params['state'] = 'all'  # closed issues too
         issues = self.fetch_endpoint('issues', params=params)
         if not issues:
             return False
@@ -220,7 +235,8 @@ class GitHub():
             return False
 
     def fetch_milestone(self, issue):
-        return self.fetch_issue_events(issue, 'milestoned')
+        return (self.fetch_issue_events(issue, 'milestoned') +
+                self.fetch_issue_events(issue, 'demilestoned'))
 
     def parse_by_key(self, data, key, match):
         i = 0
@@ -242,3 +258,21 @@ def _latest_update(items, field_name='updated_at'):
     updates = [datetime.strptime(
         i.get(field_name, BEGINNING_OF_TIME), GH_DATE_FORMAT) for i in items]
     return max(updates).strftime(GH_DATE_FORMAT)
+
+
+def _available_data_sample():
+    "Report sample of data from available sources"
+
+    private_18f_data_repo._available_data_sample()
+    site_repo._available_data_sample()
+    print(
+        '\n18f.gsa.gov API - _team/<username>.md front matter\n---------------')
+    pprint.pprint(site_api.yaml('_team/catherine.md', 1))
+    print('\ndrafts api - issues\n---------------')
+    for issue in drafts_api.fetch_issues():
+        pprint.pprint(issue)
+        break
+    print('\nhub api - _data/locations.yml\n---------------')
+    pprint.pprint(hub_api.yaml('_data/locations.yml', 1)[0])
+    print('\nhub api - _data/team/catherine.yml\n---------------')
+    pprint.pprint(hub_api.yaml('_data/team/catherine.yml', 1))

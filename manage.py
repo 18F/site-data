@@ -9,7 +9,7 @@ from waitress import serve
 from app import db, models
 from app.app import app
 from config import config
-from lib.git_parse import GitHub
+from lib import git_parse
 
 config_name = os.getenv('FLASK_CONFIG') or 'default'
 app.logger.info('Using FLASK_CONFIG {0} from environment'.format(config_name))
@@ -50,6 +50,12 @@ def cleandata():
     "Deletes *all* stored data"
     for tbl in reversed(db.metadata.sorted_tables):
         db.engine.execute(tbl.delete())
+
+
+@manager.command
+def data_sample():
+    "Prints sample of raw available data"
+    git_parse._available_data_sample()
 
 
 if __name__ == "__main__":

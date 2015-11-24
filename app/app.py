@@ -12,7 +12,7 @@ from waitress import serve
 
 from lib.git_parse import GitHub
 
-from .charts import n_authors_by_location, n_posts_histogram
+from .charts import n_authors_by_location, n_posts_histogram, issue_lifecycles
 from .models import (Author, Event, GithubQueryLog, Issue, Milestone, Month,
                      db, update_db_from_github)
 
@@ -70,6 +70,7 @@ def load_data():
         n_authors_by_location(),
         n_posts_histogram(),
     ]
+    (data['lifecycle_script'], data['lifecycle_div']) = issue_lifecycles()
     return dict(data=data)
 
 

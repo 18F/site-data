@@ -1,4 +1,9 @@
 {% extends "header.html" %}
+
+{% block scripts %}
+  {{ data['lifecycle_script'] | safe }}
+{% endblock %}
+
 {% block body %}
 <h1 class="usa-grid usa-heading">Blog report!</h1>
 <nav id="main-nav" class="usa-grid usa-width-one-quarter" role="menu">
@@ -15,6 +20,11 @@
   </ul>
 </nav>
 <section class="charts">
+
+  <div>
+  {{ data['lifecycle_div'] | safe }}
+  </div>
+
   {% for chart in data['charts'] %}
     {{ chart.render()|safe }}
   {% endfor %}
