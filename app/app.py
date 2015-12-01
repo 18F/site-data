@@ -66,11 +66,9 @@ def load_data():
     }
     for i in Issue.query:
         data['issue-{0}-milestones'.format(i.number)] = i.milestones
-    data['charts'] = [  # n_authors(),   # too boring
-        n_authors_by_location(),
-        n_posts_histogram(),
-    ]
     (data['lifecycle_script'], data['lifecycle_div']) = issue_lifecycles()
+    (data['authors_by_location_script'], data['authors_by_location_div']) = n_authors_by_location()
+    (data['authorship_histogram_script'], data['authorship_histogram_div']) = n_posts_histogram()
     return dict(data=data)
 
 

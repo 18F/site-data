@@ -2,6 +2,8 @@
 
 {% block scripts %}
   {{ data['lifecycle_script'] | safe }}
+  {{ data['authors_by_location_script'] | safe }}
+  {{ data['authorship_histogram_script'] | safe }}
 {% endblock %}
 
 {% block body %}
@@ -25,9 +27,14 @@
   {{ data['lifecycle_div'] | safe }}
   </div>
 
-  {% for chart in data['charts'] %}
-    {{ chart.render()|safe }}
-  {% endfor %}
+  <div>
+  {{ data['authors_by_location_div'] | safe }}
+  </div>
+
+  <div>
+  {{ data['authorship_histogram_div'] | safe }}
+  </div>
+
 </section>
 <section>
   <h2>Posts authored per team member, by team</h2>

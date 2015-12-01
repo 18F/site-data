@@ -81,6 +81,12 @@ class Month(db.Model):
         month_end = "{0}-{1}".format(self, self.end().day)
         return {"since": month_begin, "until": month_end}
 
+    @classmethod
+    def all_authors(cls):
+        for m in cls.non_empty():
+            for a in m.authors:
+                yield (a, m)
+
 
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
