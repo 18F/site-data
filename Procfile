@@ -1,1 +1,1 @@
-web: python manage.py deploy
+web: python manage.py db upgrade && python manage.py updatedata && python manage.py deploy

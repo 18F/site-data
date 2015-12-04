@@ -1,5 +1,8 @@
+alembic==0.8.2
 Flask==0.10.1
 Flask-Script==2.0.5
+Flask-Migrate==1.6.0
+Flask-SQLAlchemy==2.0
 Jinja2==2.7.3
 MarkupSafe==0.23
 PyYAML==3.11
@@ -18,4 +21,5 @@ requests-mock==0.6.0
 responses==0.4.0
 six==1.9.0
 waitress==0.8.9
-wsgiref==0.1.2
+psycopg2==2.6.1
+

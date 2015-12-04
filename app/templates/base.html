@@ -1,0 +1,23 @@
+{% from 'macros.html' import created_at %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>18F Blog Data Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+  <header>
+    <h1>18F Blog Data Report</h1>
+  </header>
+
+  <section class="main">
+    {% block body %}{% endblock %}
+  </div>
+
+  <script src="/static/js/vendor/jquery-1.11.3.min.js"></script>
+  <script src="/static/js/app.js"></script>
+
+</body>
+</html>

@@ -1,16 +1,21 @@
+import os
 from flask.ext.script import Manager
+from flask.ext.migrate import Migrate, MigrateCommand
 from app.app import app
 from lib.git_parse import GitHub
-from lib.fetch import Fetch
-# from blog.issues import Drafts
-# from blog.authors import Authors
-from datetime import date
+from datetime import date, timedelta
 from os import path, stat, environ
 from waitress import serve
+from config import config
+from app import db, models
 
+config_name = os.getenv('FLASK_CONFIG') or 'default'
+app.logger.info('Using FLASK_CONFIG {0} from environment'.format(config_name))
+app.config.from_object(config[config_name])
+db.init_app(app)
+migrate = Migrate(app, db)
 manager = Manager(app)
-
-port = port = int(environ["VCAP_APP_PORT"])
+manager.add_command('db', MigrateCommand)
 
 if environ['ENV'] == 'local':
     app.logger.debug('A value for debugging')
@@ -20,30 +25,30 @@ if environ['ENV'] == 'local':
 else:
     app.debug = False
 
+
 @manager.command
-def updatedata():
-    fetch    = Fetch('')
-    authors  = Authors()
-    drafts   = Drafts()
-    today = date.today().strftime("%Y-%m")
-    print "Fetching authors"
-    authors.fetch_all(today)
-    print "Fetching drafts"
-    drafts.fetch_all()
+def updatedata(days=0):
+    """Refresh stored data from upstream sources.
 
-    if path.exists('_data/issues.json'):
-        issues = fetch.get_data_from_file("_data/issues.json")
+    Args:
+        days: Pull from each data source only if the last pull was at least
+            this many days ago (default 0)
+    """
+    models.update_db_from_github(timedelta(days=days))
 
-        # Fetch the milestone for each issue as json
-        for i in issues:
-            number = i['number']
-            milestones = "_data/issue-%s-milestones.json" % number
-            print "Fetching milestones for %s" % number
-            drafts.fetch_milestone(number)
 
 @manager.command
 def deploy():
+    port = int(environ["VCAP_APP_PORT"])
     serve(app, port=port)
+
+
+@manager.command
+def cleandata():
+    "Deletes *all* stored data"
+    for tbl in reversed(db.metadata.sorted_tables):
+        db.engine.execute(tbl.delete())
+
 
 if __name__ == "__main__":
     manager.run()

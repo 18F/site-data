@@ -24,6 +24,17 @@ You'll need to make your own local .env file and populate it with your GitHub us
 
     cp .env-example .env
 
+Unless you're using a tool like [autoenv](https://github.com/kennethreitz/autoenv), you'll need to `source .env`
+before running.
+
+Then create the `site-data-dev` database:
+
+    createdb site-data-dev
+
+and set it up
+
+    python manage.py db upgrade
+
 ## Running
 
 Run the server like so:
@@ -31,3 +42,11 @@ Run the server like so:
     honcho start
 
 Then you should be able to access the app at `http://localhost:5000`.
+
+### Public domain
+
+This project is in the worldwide [public domain](LICENSE.md). As stated in [CONTRIBUTING](CONTRIBUTING.md):
+
+> This project is in the public domain within the United States, and copyright and related rights in the work worldwide are waived through the [CC0 1.0 Universal public domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
+>
+> All contributions to this project will be released under the CC0 dedication. By submitting a pull request, you are agreeing to comply with this waiver of copyright interest.
