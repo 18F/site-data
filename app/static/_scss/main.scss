@@ -1,3 +1,42 @@
 // Place list of your partial imports below, located in assets/_scss.
 
 @import 'all';
+
+header {
+  .logo {
+    display: inline-block;
+    width: 90px;
+  }
+
+  h1 {
+    display: inline-block;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0 1rem;
+  }
+}
+
+.usa-grid {
+  padding: 0;
+}
+
+.main-nav {
+  background: #eee;
+  border-radius: 0.5rem;
+
+  li {
+    display: inline-block;
+
+    &::before {
+      content: '';
+      display: inline-block;
+    }
+
+    li {
+      display: block;
+    }
+  }
+
+
+}
+

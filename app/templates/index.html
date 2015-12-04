@@ -1,7 +1,8 @@
-{% extends "header.html" %}
+{% extends "base.html" %}
+
 {% block body %}
-<h1 class="usa-grid usa-heading">Blog report!</h1>
-<nav id="main-nav" class="usa-grid usa-width-one-quarter" role="menu">
+
+<nav class="main-nav" role="menu">
   <ul>
     <li><a href="#authors">Authors by month</a></li>
     <li><a href="#in-review">Posts in review</a>
@@ -14,6 +15,7 @@
     <li><a href="#all-posts">All other posts</a></li>
   </ul>
 </nav>
+
 <section class="usa-width-three-quarters">
   <h2 id="authors usa-heading">Total authors</h2>
     <p>There are currently {{ data['current'] | length }} authors.</p>
