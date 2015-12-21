@@ -418,7 +418,8 @@ def update_db_from_github(refresh_timedelta):
         for author in Author.query:
             author.record_post_history()
 
-    repo = Repo.get_fresh(owner_name='18f', repo_name='blog-drafts',
-                   refresh_threshhold_seconds=refresh_timedelta.total_seconds())
-    import ipdb; ipdb.set_trace()
+    repo = Repo.get_fresh(
+        owner_name='18f',
+        repo_name='blog-drafts',
+        refresh_threshhold_seconds=refresh_timedelta.total_seconds())
     repo.set_milestone_color_map()
