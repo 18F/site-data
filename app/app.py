@@ -12,8 +12,8 @@ from waitress import serve
 
 from lib.git_parse import GitHub
 
-from .charts import n_authors_by_location, n_posts_histogram
-from .models import (Author, Event, GithubQueryLog, Month,
+from .charts import n_authors_by_location, n_posts_histogram, lifecycles
+from .models import (Author, Event, GithubQueryLog, Month, Repo,
                      db, update_db_from_github)
 
 app = Flask(__name__)
@@ -64,6 +64,9 @@ def load_data():
         'headcount': Author.query.count(),
     }
     (data['lifecycle_script'], data['lifecycle_div']) = ('', '')
+
+    repo = Repo.get_fresh('18f', 'blog-drafts', refresh_threshhold_seconds=app.config['REFRESH_TIMEDELTA'].total_seconds())
+    data['lifecycle'] = lifecycles(repo.json_summary_flattened())
     (data['authors_by_location_script'], data['authors_by_location_div']) = n_authors_by_location()
     (data['authorship_histogram_script'], data['authorship_histogram_div']) = n_posts_histogram()
     return dict(data=data)

@@ -10,6 +10,7 @@ from lib.git_parse import (drafts_api, hub_api, private_18f_data_repo,
 from lib.utils import to_py_date
 
 from . import db
+from app.github_issue_lifecycles.app.models import Repo, Issue, Person, Label, Event
 
 author_months = db.Table(
     'author_months',
@@ -170,12 +171,6 @@ class Post(db.Model):
                 db.session.add(post)
         GithubQueryLog.log('posts')
         db.session.commit()
-
-
-labels_issues = db.Table(
-    'labels_issues',
-    db.Column('label_id', db.Integer, db.ForeignKey('label.id')),
-    db.Column('issue_id', db.Integer, db.ForeignKey('issue.id')))
 
 
 class ClosedMilestone(object):
@@ -404,41 +399,6 @@ class GithubQueryLog(db.Model):
         db.session.add(qlog)
 
 
-class Label(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String())
-    url = db.Column(db.String())
-    color = db.Column(db.String(), nullable=True)
-
-    @classmethod
-    def get_or_create(cls, label_data):
-        label = cls.query.filter_by(name=label_data['name']).first() \
-                or cls(**label_data)
-        return label
-
-
-class Event(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    commit_id = db.Column(db.String())
-    url = db.Column(db.String())
-    actor = db.Column(db.String())
-    event = db.Column(db.String())
-    created_at = db.Column(db.Date())
-    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
-
-    @classmethod
-    def from_gh_data(cls, event_data):
-        "Given dict of event data fetched from GitHub API, return instance"
-        return cls(id=event_data['id'],
-                   commit_id=event_data['commit_id'],
-                   url=event_data['url'],
-                   actor=event_data['actor'].get('login') if event_data[
-                       'actor'] else None,
-                   event=event_data['event'],
-                   created_at=to_py_date(event_data.get('created_at')), )
-
-
-
 def update_db_from_github(refresh_timedelta):
     """Refresh author and issue data from Github / 18f API.
 
@@ -457,3 +417,8 @@ def update_db_from_github(refresh_timedelta):
         Post.fetch()
         for author in Author.query:
             author.record_post_history()
+
+    repo = Repo.get_fresh(owner_name='18f', repo_name='blog-drafts',
+                   refresh_threshhold_seconds=refresh_timedelta.total_seconds())
+    import ipdb; ipdb.set_trace()
+    repo.set_milestone_color_map()

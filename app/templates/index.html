@@ -1,7 +1,7 @@
 {% extends "header.html" %}
 
 {% block scripts %}
-  {{ data['lifecycle_script'] | safe }}
+  {{ data['lifecycle']['script'] | safe }}
   {{ data['authors_by_location_script'] | safe }}
   {{ data['authorship_histogram_script'] | safe }}
 {% endblock %}
@@ -24,7 +24,7 @@
 <section class="charts">
 
   <div>
-  {{ data['lifecycle_div'] | safe }}
+  {{ data['lifecycle']['div'] | safe }}
   </div>
 
   <div>

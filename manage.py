@@ -37,6 +37,7 @@ def updatedata(days=0):
             this many days ago (default 0)
     """
     models.update_db_from_github(timedelta(days=days))
+                          
 
 
 @manager.command
