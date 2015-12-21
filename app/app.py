@@ -12,8 +12,8 @@ from waitress import serve
 
 from lib.git_parse import GitHub
 
-from .charts import n_authors_by_location, n_posts_histogram, issue_lifecycles
-from .models import (Author, Event, GithubQueryLog, Issue, Milestone, Month,
+from .charts import n_authors_by_location, n_posts_histogram
+from .models import (Author, Event, GithubQueryLog, Month,
                      db, update_db_from_github)
 
 app = Flask(__name__)
@@ -58,15 +58,12 @@ def load_data():
     data = {
         'months': Month.query.filter(Month.authors),
         'current': Author.query.filter(Author.posts).all(),
-        'issues': Issue.query.all(),
         'formatted': date.today().strftime('%Y-%-m-%d'),
         'authorship_by_team': Author.authorship_histogram_by_team(),
         'authorship_by_loc': Author.authorship_histogram_by_loc(),
         'headcount': Author.query.count(),
     }
-    for i in Issue.query:
-        data['issue-{0}-milestones'.format(i.number)] = i.milestones
-    (data['lifecycle_script'], data['lifecycle_div']) = issue_lifecycles()
+    (data['lifecycle_script'], data['lifecycle_div']) = ('', '')
     (data['authors_by_location_script'], data['authors_by_location_div']) = n_authors_by_location()
     (data['authorship_histogram_script'], data['authorship_histogram_div']) = n_posts_histogram()
     return dict(data=data)

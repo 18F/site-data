@@ -195,122 +195,6 @@ class ClosedMilestone(object):
         self.issue = issue
 
 
-class Issue(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    number = db.Column(db.Integer)
-    title = db.Column(db.String())
-    body = db.Column(db.String())
-    state = db.Column(db.String())
-    creator_id = db.Column(db.Integer, db.ForeignKey('author.id'))
-    assignee_id = db.Column(db.Integer, db.ForeignKey('author.id'))
-    comments = db.Column(db.String())
-    locked = db.Column(db.Boolean)
-    url = db.Column(db.String(), nullable=True)
-    events_url = db.Column(db.String(), nullable=True)
-    labels_url = db.Column(db.String(), nullable=True)
-    comments_url = db.Column(db.String(), nullable=True)
-    html_url = db.Column(db.String(), nullable=True)
-    created_at = db.Column(db.Date(), default=date.today)
-    updated_at = db.Column(db.Date(), default=date.today)
-    closed_at = db.Column(db.Date(), nullable=True)
-    labels = db.relationship('Label',
-                             secondary=labels_issues,
-                             backref=db.backref('issues',
-                                                lazy='dynamic'))
-    milestones = db.relationship('Milestone',
-                                 cascade='all, delete-orphan',
-                                 order_by='Milestone.created_at',
-                                 backref='issue')
-    events = db.relationship('Event', cascade='all, delete-orphan')
-
-    @classmethod
-    def from_gh_data(cls, issue_data):
-        """Given dict of issue data fetched from GitHub API, return instance.
-
-        If the issue already exists, delete it (and its milestones)
-        and replace it."""
-        issue = cls.query.filter_by(number=issue_data.get('number')).first()
-        if issue:
-            db.session.delete(issue)
-        db.session.commit()
-        author = Author.query.filter_by(
-            github=issue_data['user'].get('login')).first()
-        if issue_data.get('assignee'):
-            assignee = Author.query.filter_by(
-                github=issue_data['assignee'].get('login')).first()
-        else:
-            assignee = None
-        insertable = {
-            'id': issue_data.get('id'),
-            'number': issue_data.get('number'),
-            'title': issue_data.get('title'),
-            'state': issue_data.get('state'),
-            'author': author,
-            'assignee': assignee,
-            'body': issue_data.get('body'),
-            'locked': issue_data.get('locked'),
-            'url': issue_data.get('url'),
-            'labels_url': issue_data.get('labels_url'),
-            'html_url': issue_data.get('html_url'),
-            'events_url': issue_data.get('events_url'),
-            'updated_at': to_py_date(issue_data['updated_at']),
-            'created_at': to_py_date(issue_data['created_at']),
-            'closed_at': to_py_date(issue_data['closed_at']),
-        }
-        issue = cls(**insertable)
-        for label_data in issue_data['labels']:
-            issue.labels.append(Label.get_or_create(label_data))
-        db.session.add(issue)
-        db.session.commit()
-        return issue
-
-    def virtual_closure_milestone(self):
-        "Impersonate a Milestone represeting this issue's closure."
-        return {'title': 'closed',
-                'state': True,
-                'commit_id': None,
-                'created_at': self.closed_at,
-                'url': self.html_url,
-                'color': 'grey',
-                'opacity': 0.4,
-                'is_terminal': True,
-                'issue': self,
-                'arclength': 2 * pi}
-
-    def milestones_for_chart(self):
-        "Appends a virtual `closed` milestone, if needed, to those in the DB"
-        for m in self.milestones:
-            yield m
-        if self.closed_at and 'posted' not in [m.title
-                                               for m in self.milestones]:
-            yield ClosedMilestone(self)
-
-    @classmethod
-    def fetch(cls, since):
-        issues = drafts_api.fetch_issues(since=since)
-        for issue_data in issues:
-            issue = cls.from_gh_data(issue_data)
-            milestones = drafts_api.fetch_milestone(issue.number)
-            for milestone_data in milestones:
-                issue.milestones.append(Milestone.from_gh_data(milestone_data))
-            events = drafts_api.fetch_issue_events(issue.number)
-            for event_data in events:
-                issue.events.append(Event.from_gh_data(event_data))
-        GithubQueryLog.log('issues')
-        db.session.commit()
-
-    _history_summary_template = "{} -- {}"
-
-    def history_summary(self):
-        "Text summary of an issue's history of milestones"
-        result = [self._history_summary_template.format(
-            self.created_at.strftime('%b %d'), 'created')]
-        for m in self.milestones:
-            result.append(self._history_summary_template.format(
-                m.created_at.strftime('%b %d'), m.title))
-        return "<br />\n".join(result)
-
-
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String())  # in 18F site
@@ -324,12 +208,6 @@ class Author(db.Model):
     airport_code = db.Column(db.String(),
                              db.ForeignKey('duty_station.airport_code'))
     team_id = db.Column(db.Integer(), db.ForeignKey('team.id'))
-    created = db.relationship('Issue',
-                              foreign_keys=[Issue.creator_id, ],
-                              backref='author')
-    assigned = db.relationship('Issue',
-                               foreign_keys=[Issue.assignee_id, ],
-                               backref='assignee')
     _scalar_fields = ['github', 'first_name', 'last_name', 'full_name', 'url',
                       'pronouns', 'airport_code']
 
@@ -560,77 +438,6 @@ class Event(db.Model):
                    created_at=to_py_date(event_data.get('created_at')), )
 
 
-class Milestone(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String())
-    state = db.Column(db.Boolean, nullable=False)
-    commit_id = db.Column(db.String(), nullable=True)
-    created_at = db.Column(db.Date(), default=date.today)
-    url = db.Column(db.String())
-    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
-
-    @classmethod
-    def from_gh_data(cls, milestone_data):
-
-        "Given dict of milestone data fetched from GitHub API, return instance"
-        return cls(id=milestone_data['id'],
-                   title=milestone_data['milestone']['title'],
-                   state=(milestone_data['event'] == 'milestoned'),
-                   commit_id=milestone_data.get('commit_id'),
-                   created_at=to_py_date(milestone_data.get('created_at')),
-                   url=milestone_data.get('url'), )
-
-    _statuses = {'idea': 0,
-                 'draft': 1,
-                 'to edit': 2,
-                 'ready': 3,
-                 'ready to approve': 3,
-                 'approved': 4,
-                 'posted': 5, }
-    _colors = ('cyan',
-               'blue',
-               'yellow',
-               'orange',
-               'green',
-               'purple', )  # TODO: 508 these?
-    _opacities = (0.2, 0.4, 0.6, 0.7, 0.8, 0.9)
-    _arclength_per_step = (2 * pi) / (len(_colors) + 1)
-
-    @property
-    def arclength(self):
-        "This milestone, represented as a clock-style arc toward completion"
-        idx = self._statuses[self.title]
-        return self._arclength_per_step * (idx + 1)
-
-    @property
-    def color(self):
-        "Color representing this milestone's degree of completion"
-        idx = self._statuses[self.title]
-        return self._colors[idx]
-
-    @property
-    def opacity(self):
-        "Opacity representing this milestone's degree of completion"
-        idx = self._statuses[self.title]
-        return self._opacities[idx]
-
-    @property
-    def is_terminal(self):
-        "A final milestone, no further milestones expected for this issue"
-        idx = self._statuses[self.title]
-        return idx == len(self._colors) - 1
-
-    def next(self):
-        "The `state`==`True` milestone following this one in this Issue"
-        active_milestones = [m
-                             for m in self.issue.milestones_for_chart()
-                             if m.state]
-        idx = active_milestones.index(self)
-        try:
-            return active_milestones[idx + 1]
-        except IndexError:
-            return None
-
 
 def update_db_from_github(refresh_timedelta):
     """Refresh author and issue data from Github / 18f API.
@@ -650,6 +457,3 @@ def update_db_from_github(refresh_timedelta):
         Post.fetch()
         for author in Author.query:
             author.record_post_history()
-    last_query = GithubQueryLog.last_query_datetime('issues')
-    if (datetime.now() - last_query) > refresh_timedelta:
-        Issue.fetch(since=last_query)
