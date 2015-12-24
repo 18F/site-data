@@ -10,7 +10,7 @@ from lib.git_parse import (drafts_api, hub_api, private_18f_data_repo,
 from lib.utils import to_py_date
 
 from . import db
-from app.github_issue_lifecycles.app.models import Repo, Issue, Person, Label, Event
+from app.github_issue_lifecycle.app.models import Repo, Issue, Person, Label, Event
 
 author_months = db.Table(
     'author_months',
@@ -422,4 +422,3 @@ def update_db_from_github(refresh_timedelta):
         owner_name='18f',
         repo_name='blog-drafts',
         refresh_threshhold_seconds=refresh_timedelta.total_seconds())
-    repo.set_milestone_color_map()

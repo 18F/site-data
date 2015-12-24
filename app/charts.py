@@ -7,7 +7,7 @@ from bokeh.charts import Bar, Histogram
 from pandas import DataFrame
 
 from .models import (Author, Month)
-from .github_issue_lifecycles.app.charts import lifecycles
+from .github_issue_lifecycle.app.charts import lifecycles
 
 WIDTH = 800
 HEIGHT = 400
