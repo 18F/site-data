@@ -5,7 +5,8 @@ sudo: false
 cache: pip
 
 python:
-  - "3.5"
+  - "2.7"
+  - "3.4"
 
 addons:
   postgresql: "9.4"
