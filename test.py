@@ -1,8 +1,16 @@
-from lib.git_parse import GitHub, drafts_api, GH_DATE_FORMAT
-import os, nose, json, requests, requests_mock, datetime
-from nose.tools import with_setup
+import datetime
+import json
+import os
+
+import nose
+import requests
+import requests_mock
 from nose.plugins.skip import Skip, SkipTest
+from nose.tools import with_setup
+
 from app.app import app
+from lib.git_parse import GH_DATE_FORMAT, GitHub, drafts_api
+
 
 ### GitHub Module tests ###
 

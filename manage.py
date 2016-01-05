@@ -1,13 +1,15 @@
 import os
-from flask.ext.script import Manager
-from flask.ext.migrate import Migrate, MigrateCommand
-from app.app import app
-from lib.git_parse import GitHub
 from datetime import date, timedelta
-from os import path, stat, environ
+from os import environ, path, stat
+
+from flask.ext.migrate import Migrate, MigrateCommand
+from flask.ext.script import Manager
 from waitress import serve
-from config import config
+
 from app import db, models
+from app.app import app
+from config import config
+from lib import git_parse
 
 config_name = os.getenv('FLASK_CONFIG') or 'default'
 app.logger.info('Using FLASK_CONFIG {0} from environment'.format(config_name))
@@ -35,6 +37,7 @@ def updatedata(days=0):
             this many days ago (default 0)
     """
     models.update_db_from_github(timedelta(days=days))
+                          
 
 
 @manager.command
@@ -48,6 +51,12 @@ def cleandata():
     "Deletes *all* stored data"
     for tbl in reversed(db.metadata.sorted_tables):
         db.engine.execute(tbl.delete())
+
+
+@manager.command
+def data_sample():
+    "Prints sample of raw available data"
+    git_parse._available_data_sample()
 
 
 if __name__ == "__main__":
