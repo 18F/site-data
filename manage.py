@@ -23,7 +23,7 @@ if environ['ENV'] == 'local':
     app.logger.error('An error occurred')
     app.debug = True
 else:
-    app.debug = False
+    app.debug = True
 
 
 @manager.command

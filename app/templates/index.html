@@ -1,20 +1,14 @@
 {% extends "header.html" %}
 {% block body %}
 <h1 class="usa-grid usa-heading">Blog report!</h1>
-<nav id="main-nav" class="usa-grid usa-width-one-quarter" role="menu">
+<nav id="main-nav" class="usa-grid usa-width-one-half" role="menu">
   <ul>
-    <li><a href="#authors">Authors by month</a></li>
-    <li><a href="#in-review">Posts in review</a>
-      <ul>
-        <li><a href="#in-review-morethan-6-weeks">Longer than 6 weeks</a></li>
-        <li><a href="#in-review-morethan-3-weeks">Longer than 3 weeks</a></li>
-        <li><a href="#in-review-upto-3-weeks">Between 1 and 3 weeks</a></li>
-        <li><a href="#in-review-0-weeks">Sent this week</a></li>
-      </ul></li>
-    <li><a href="#all-posts">All other posts</a></li>
+    <li><a href="/#authors">Authors by month</a></li>
+    <li><a href="/issues/">Issues open</a></li>
+    <li><a href="/analytics/">Web Analytics</a></li>
   </ul>
 </nav>
-<section class="usa-width-three-quarters">
+<section class="usa-width-one-half">
   <h2 id="authors usa-heading">Total authors</h2>
     <p>There are currently {{ data['current'] | length }} authors.</p>
     <p>The number of authors in previous months has been:</p>
@@ -22,43 +16,5 @@
       <li>{{ m }}: {{ m.authors | length}}</li>
         {% endfor %}
     </ul>
-  {% if data['issues'] %}
-  <section class="blogging-info">
-    <h2 id="in-review">Blog Drafts in Review</h2>
-      <section id="in-review-morethan-6-weeks" class="oldest-posts on-hold">
-        <h3>Longer than six weeks</h3>
-        <p>The following posts were sent for approval <strong>more than six weeks ago</strong>.</p>
-        <p class="count"></p>
-        <a href="#main-nav" class="to-top">Back to top</a>
-      </section>
-      <section id="in-review-morethan-3-weeks" class="older-posts on-hold">
-        <h3>Longer than three weeks</h3>
-        <p>The following posts were sent for approval <strong>more than three weeks ago</strong>.</p>
-        <a href="#main-nav" class="to-top">Back to top</a>
-      </section>
-      <section id="in-review-upto-3-weeks" class="newer-posts on-hold">
-        <h3>Between one and three weeks</h3>
-        <p>The following posts were sent for approval <strong>between one and three weeks ago</strong>.</p>
-        <a href="#main-nav" class="to-topk">Back to top</a>
-      </section>
-      <section id="in-review-0-weeks" class="newest-posts on-hold">
-        <h3>In the last week</h3>
-        <p>The following posts were sent for approval <strong>in the last week</strong> are are held up in approval.</p>
-        <a href="#main-nav" class="to-top">Back to top</a>
-      </section>
-      <hr>
-      <section id="all-posts" class="all-posts">
-        <h2>All other posts</h2>
-          <p>The following posts are either ideas or in the process of being drafted.</p>
-          {% for i in data['issues'] | sort(reverse=1, attribute='updated_at')%}{% set id = i['number'].__str__() %}
-            <article class="usa-grid usa-grid-one-half blog-issue" data-approve="{{created_at(i, data['issue-'+id+'-milestones'])}}" data-created="{{i.created_at}}" data-updated="{{i.updated_at}}" data-labels="{% for l in i.labels %}{{l.name}}{% if not loop.last %},{% endif %}{% endfor %}">
-              <h3 class="usa-heading" ><a href="{{i.html_url}}">{{ i.title }}</a></h3> <strong>tagged: {% for l in i.labels %}{{l.name}}{% if not loop.last %}, {% endif%}{% endfor %}</strong>
-              <ul class="meta"></ul>
-            </article>
-          {% endfor %}
-      {% endif %}
-      <a href="#main-nav">Back to top</a>
-    </section>
-  </section>
 </section>
 {% endblock %}

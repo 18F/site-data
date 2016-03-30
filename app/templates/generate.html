@@ -1,0 +1,142 @@
+{% extends "header.html" %}
+{% block body %}
+<code>
+  {{ posted }}
+</code>
+<form action="/dashboard-generate" method="post">
+
+  <label for="name">Name of the project (a url slug for the dashboard):</label>
+  <input id="name"></input>
+
+  <label for="full_name">Name of the project as it should appear on the Dashboard:</label>
+  <input id="full_name"></input>
+
+  <label for="type">Type</label>
+  <select id="type">
+    <option value="app" selected>App</option>
+    <option value="docs">Docs</option>
+    <option value="policy">Policy</option>
+  </select>
+
+  <label for="owner_type">Owner type</label>
+  <select id="owner_type">
+    <option value="guild" selected>Guild</option>
+    <option value="working-group">Working group</option>
+    <option value="project">Project</option>
+  </select>
+
+  <label for="stage">Stage</label>
+  <select id="stage">
+    <option value="" selected>Select a stage</option>
+    <option value="discovery">Discovery</option>
+    <option value="alpha">Alpha</option>
+    <option value="beta">Beta</option>
+    <option value="live">Live</option>
+  </select>
+
+  <label for="status">Status</label>
+  <select id="status">
+    <option value="active">Active</option>
+    <option value="inactive">Inactive</option>
+  </select>
+
+  <label for="description">Description of the project</label>
+  <aside>This appears in two places on the Dashboard: on the hompage underneath the project name, and on your project's page. It is a description of the whole project, not just one repo.</aside>
+  <textarea id="description"></textarea>
+
+  <label for="impact">Impact</label>
+  <p>Briefly summarize the potential impact of this project.</p>
+  <input id="impact"></input>
+
+  <fieldset class="usa-fieldset-inputs usa-sans">
+
+    <legend class="usa-sr-only">Choose yes or no depending on whether this product uses continuous integration.</legend>
+    <p>Does this project use continuous integration?<p>
+    <ul class="usa-unstyled-list">
+      <li>
+        <input id="testable-true" checked="" name="testable" value="true" type="radio">
+        <label for="testable-true">Yes</label>
+      </li>
+      <li>
+        <input id="testable-false" name="testable" value="false" type="radio">
+        <label for="testable-false">No</label>
+      </li>
+    </ul>
+
+  </fieldset>
+  <p>Team members</p>
+  <fieldset class="usa-fieldset-inputs usa-sans">
+    <legend class="usa-sr-only">Enter the id, GitHub username, and role for each team member</legend>
+    <label for="team[0][id]">ID (look this up on https://hub.18f.gov/team)</label>
+    <input id="team[0][id]"></input>
+
+    <label for="team[0][github]">GitHub username (look this up on https://hub.18f.gov/team)</label>
+    <input id="team[0][github]"></input>
+
+    <label for="team[0][role]">Team member's role</label>
+    <input id="team[0][role]"></input>
+  </fieldset>
+  <p>Partner agencies (check all that apply)</p>
+  <fieldset>
+    <legend class="usa-sr-only">Other agencies involved in this project</legend>
+      <ul class="usa-unstyled-list">
+        <li>
+          <input id="us-interior" name="us-interior" value="us-interior" type="checkbox">
+          <label for="us-interior">U.S. Department of the Interior</label>
+        </li>
+        <li>
+          <input id="department-education" name="department-education" value="department-education" type="checkbox">
+          <label for="department-education">Education Department</label>
+        </li>
+        <li>
+          <input id="gsa" name="gsa" value="gsa" type="checkbox">
+          <label for="gsa">General Services Administration</label>
+        </li>
+      </ul>
+  </fieldset>
+  <fieldset class="usa-fieldset-inputs">
+      <legend>Milestones</legend>
+      <span class="usa-form-hint usa-datefield-hint" id="milestoneHint">For example: 07 04 1776</span>
+
+      <div class="usa-date-of-birth">
+        <div class="usa-datefield usa-form-group usa-form-group-month">
+          <label for="milestone[0][month]">Month</label>
+          <input aria-describedby="milestoneHint" class="usa-form-control" id="milestone[0][month]" name="milestone[0][month]" pattern="0?[1-9]|1[012]" min="1" max="12" value="" type="number">
+        </div>
+        <div class="usa-datefield usa-form-group usa-form-group-day">
+          <label for="milestone[0][day]">Day</label>
+          <input aria-describedby="milestoneHint" class="usa-form-control" id="milestone[0][day]" name="milestone[0][day]" pattern="0?[1-9]|1[0-9]|2[0-9]|3[01]" min="1" max="31" value="" type="number">
+        </div>
+        <div class="usa-datefield usa-form-group usa-form-group-year">
+          <label for="milestone[0][year]">Year</label>
+          <input aria-describedby="milestoneHint" class="usa-form-control" id="milestone[0][year]" name="milestone[0][year]" pattern="[0-9]{4}" min="1900" max="2015" value="" type="number">
+        </div>
+        <div class="usa-form" style="clear: left">
+          <label for="milestone[0][title]">Milestone (example: first public release)</label>
+          <input id="milestone[0][title]"></input>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Stack</legend>
+      <p>Describe your product's stack.</p>
+      <label for="stack[0]">Item:</label>
+      <input id="stack[0]"></input>
+      <label for="stack[1]">Item:</label>
+      <input id="stack[1]"></input>
+    </fieldset>
+
+    <fieldset>
+      <legend>Blog tags</legend>
+      <p>Enter upto three tags that identify your project on the 18F blog.</p>
+        <label for="tags[0]">Enter a tag name:</label>
+        <input id="tags[0]"></input>
+        <label for="tags[1]">Enter a tag name:</label>
+        <input id="tags[1]"></input>
+        <label for="tags[2]">Enter a tag name:</label>
+        <input id="tags[2]"></input>
+    </fieldset>
+
+  <button type="submit">Get your about.yml file!</button>
+</form>
+{% endblock %}

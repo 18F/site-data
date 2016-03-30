@@ -67,7 +67,10 @@ class GitHub():
         raw = self.raw_file(path)
         if raw:
             segments = raw.text.split('---')
-            return yaml.load(segments[segment_number])
+            clean_segment = segments[segment_number].replace("\t", "")
+            if clean_segment.find("\t") > 0:
+                import pdb; pdb.set_trace()
+            return yaml.load(clean_segment)
         else:
             return {}
 

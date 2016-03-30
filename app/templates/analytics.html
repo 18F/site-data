@@ -1,0 +1,27 @@
+{% extends "header.html" %}
+{% block body %}
+  <h1 class="usa-grid usa-heading">Analytics report</h1>
+  <form class="usa-grid" action="" method="get" name="analytics">
+    <fieldset class="usa-width-one-whole">
+      <legend>Start date</legend>
+       <span class="usa-form-hint usa-datefield-hint" id="dateHint">For example: 04 28 1986</span>
+
+       <div class="usa-analytics-start-date">
+         <div class="usa-datefield usa-form-group usa-form-group-month">
+           <label for="start_date_1">Month</label>
+           <input aria-describedby="dateHint" class="usa-form-control" id="start_date_1" name="start_date_1" pattern="0?[1-9]|1[012]" type="number" min="1" max="12" value="">
+         </div>
+         <div class="usa-datefield usa-form-group usa-form-group-day">
+           <label for="start_date_2">Day</label>
+           <input aria-describedby="dateHint" class="usa-form-control" id="start_date_2" name="start_date_2" pattern="0?[1-9]|1[0-9]|2[0-9]|3[01]" type="number" min="1" max="31" value="">
+         </div>
+         <div class="usa-datefield usa-form-group usa-form-group-year">
+           <label for="start_date_3">Year</label>
+           <input aria-describedby="dateHint" class="usa-form-control" id="start_date_3" name="start_date_3" pattern="[0-9]{4}" type="number" min="2005" value="">
+         </div>
+       </div>
+    </fieldset>
+    <button submit>Submit</button>
+  </form>
+  <h3 class="usa-grid usa-heading">{{ data['sessions'] }} sessions on 18f.gsa.gov since {{ data['date'].strftime('%B %d, %Y')}}</h3>
+{% endblock %}

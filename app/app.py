@@ -2,6 +2,7 @@ import os
 from datetime import date, timedelta
 from flask import Flask, request, render_template, make_response, Response
 from lib.git_parse import GitHub
+import lib.ga as ga
 from functools import wraps
 from waitress import serve
 import calendar
@@ -47,8 +48,7 @@ def requires_auth(f):
     return decorated
 
 
-@app.context_processor
-def load_data():
+def load_issue_data():
     update_db_from_github(refresh_timedelta=app.config['REFRESH_TIMEDELTA'])
     data = {
         'months': Month.query.filter(Month.authors),
@@ -61,11 +61,35 @@ def load_data():
     return dict(data=data)
 
 
+def analytics_data(start_date):
+    start_date = start_date.strftime("%Y-%m-%d")
+    service = ga.main()
+    results = ga.get_sessions_by_month(service[0], service[1], start_date, date.today().strftime("%Y-%m-%d"))
+    return results
+
 @app.route("/")
 @requires_auth
 def index():
     return render_template("index.html")
 
+@app.route("/analytics/", methods=['GET'])
+@requires_auth
+def analytics(start_date=None):
+    if request.args != {}:
+        day = int(request.args.get('start_date_1'))
+        month = int(request.args.get('start_date_2'))
+        year = int(request.args.get('start_date_3'))
+        start_date = date(year, month, day)
+    else:
+        start_date = date.today()
+    results = {"sessions": analytics_data(start_date), "date": start_date}
+    return render_template("analytics.html", data=results)
+
+@app.route("/issues/")
+@requires_auth
+def issues():
+    results = load_issue_data()
+    return render_template("issues.html", data=results)
 
 @app.route("/manage/")
 @requires_auth
