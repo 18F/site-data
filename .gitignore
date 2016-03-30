@@ -5,3 +5,4 @@ static/css
 setenv.sh
 .coverage
 app/static/css
+_data/secrets.json
