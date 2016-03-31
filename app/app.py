@@ -18,7 +18,10 @@ scss_manifest = {app.name: ('static/_scss', 'static/css')}
 # Middleware
 app.wsgi_app = SassMiddleware(app.wsgi_app, scss_manifest)
 
-servers = {"production": os.environ.get('PROD'), "staging": os.environ.get('STAGING')}
+servers = {
+    "production-site": [os.environ.get('PROD'), 'production'],
+    "staging-site": [os.environ.get('STAGING'), 'staging'],
+    "production-dashboard": ['https://18f.gsa.gov/dashboard/deploy', 'production']}
 
 
 # htpasswd configuration c/o http://flask.pocoo.org/snippets/8/
@@ -97,9 +100,10 @@ def manage():
     error = None
     if request.args.get('rebuild'):
         server = request.args.get('rebuild')
-        url = servers[server]
+        url = servers[server][0]
+        branch = servers[server][1]
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        payload = {"ref": "refs/heads/%s" % server}
+        payload = {"ref": "refs/heads/%s" % branch}
         requests.post(url, data=json.dumps(payload), headers=headers)
     else:
         error = "No server to rebuild"
