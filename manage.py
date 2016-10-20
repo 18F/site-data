@@ -39,7 +39,7 @@ def updatedata(days=0):
 
 @manager.command
 def deploy():
-    port = int(environ["VCAP_APP_PORT"])
+    port = int(environ["PORT"])
     serve(app, port=port)
 
 
